@@ -108,15 +108,21 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
       if (dj?.id) {
         const result = await djService.update(dj.id, formData);
         console.log('Update result:', result);
+        if (result?.error) {
+          toast?.error(typeof result.error === 'string' ? result.error : 'Erro ao atualizar DJ');
+          return;
+        }
         toast?.success('DJ atualizado com sucesso');
       } else {
         const result = await djService.create(formData);
         console.log('Create result:', result);
-        if (result?.data) {
-          toast?.success('DJ criado com sucesso! Estrutura de pastas configurada.');
+        if (result?.error) {
+          toast?.error(typeof result.error === 'string' ? result.error : 'Erro ao criar DJ');
+          return;
         }
+        toast?.success('DJ criado com sucesso! Estrutura de pastas configurada.');
       }
-      
+
       onSave?.(formData);
       onClose();
     } catch (error) {
