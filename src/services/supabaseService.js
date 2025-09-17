@@ -13,7 +13,7 @@ const toMessage = (err) => {
   try { return JSON.stringify(err); } catch { return String(err); }
 };
 const handleError = (error, context) => {
-  console.error(`${context}:`, error);
+  console.error(`${context}:`, toMessage(error));
   return { error: toMessage(error) };
 };
 
