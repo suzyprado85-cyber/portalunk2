@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Portal UNK - Gestão de DJs e Eventos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="theme-color" content="#8b5cf6" />
+  <meta name="description" content="Sistema completo para gestão de DJs e eventos musicais. Gerencie artistas, contratos, pagamentos e muito mais." />
+  <meta name="keywords" content="DJ, eventos, música, gestão, contratos, pagamentos, Portal UNK" />
+  <meta name="author" content="Portal UNK" />
+  
+  <!-- PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Portal UNK" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  
+  <!-- Icons -->
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/logo.png" />
+  <link rel="manifest" href="/manifest.json" />
+  
+  <!-- Open Graph Tags -->
+  <meta property="og:title" content="Portal UNK - Gestão de DJs e Eventos" />
+  <meta property="og:description" content="Sistema completo para gestão de DJs e eventos musicais" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/logo.png" />
+</head>
+
+<body>
+  <noscript>
+    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f0f23; color: white; font-family: Arial, sans-serif; text-align: center;">
+      <div>
+        <h1>Portal UNK</h1>
+        <p>Você precisa ativar o JavaScript para usar esta aplicação.</p>
+      </div>
+    </div>
+  </noscript>
+  
+  <!-- Install PWA Button (hidden by default) -->
+  <button id="install-button" style="display: none; position: fixed; bottom: 20px; right: 20px; background: #8b5cf6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; z-index: 1000; font-weight: 600; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);">
+    📱 Instalar App
+  </button>
+  
+  <div class="dhiwise-code" id="root"></div>
+  <script type="module" src="/src/index.jsx"></script>
+</body>
+
+</html>
