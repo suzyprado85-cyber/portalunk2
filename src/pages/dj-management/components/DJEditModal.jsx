@@ -49,7 +49,9 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
         twitter: dj?.twitter || '',
         profile_image_url: dj?.profile_image_url || '',
         background_image_url: dj?.background_image_url || '',
-        is_active: dj?.is_active ?? true
+        is_active: dj?.is_active ?? true,
+        base_price: dj?.base_price ?? '',
+        musical_genres: dj?.musical_genres || []
       });
     }
   }, [dj]);
