@@ -23,7 +23,9 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
     twitter: '',
     profile_image_url: '',
     background_image_url: '',
-    is_active: true
+    is_active: true,
+    base_price: '',
+    musical_genres: []
   });
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
