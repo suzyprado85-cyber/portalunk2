@@ -105,12 +105,33 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       console.log('Submitting DJ data:', { djId: dj?.id, formData });
-      
+
+      const payload = {
+        name: formData.name,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        bio: formData.bio || null,
+        location: formData.location || null,
+        genre: formData.genre || null,
+        specialties: Array.isArray(formData.specialties) ? formData.specialties : [],
+        instagram: formData.instagram || null,
+        soundcloud: formData.soundcloud || null,
+        youtube: formData.youtube || null,
+        spotify: formData.spotify || null,
+        facebook: formData.facebook || null,
+        twitter: formData.twitter || null,
+        profile_image_url: formData.profile_image_url || null,
+        background_image_url: formData.background_image_url || null,
+        is_active: !!formData.is_active,
+        base_price: formData.base_price !== '' ? Number(formData.base_price) : null,
+        musical_genres: Array.isArray(formData.musical_genres) && formData.musical_genres.length > 0 ? formData.musical_genres : null
+      };
+
       if (dj?.id) {
-        const result = await djService.update(dj.id, formData);
+        const result = await djService.update(dj.id, payload);
         console.log('Update result:', result);
         if (result?.error) {
           toast?.error(typeof result.error === 'string' ? result.error : 'Erro ao atualizar DJ');
@@ -118,7 +139,7 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
         }
         toast?.success('DJ atualizado com sucesso');
       } else {
-        const result = await djService.create(formData);
+        const result = await djService.create(payload);
         console.log('Create result:', result);
         if (result?.error) {
           toast?.error(typeof result.error === 'string' ? result.error : 'Erro ao criar DJ');
@@ -127,7 +148,7 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
         toast?.success('DJ criado com sucesso! Estrutura de pastas configurada.');
       }
 
-      onSave?.(formData);
+      onSave?.(payload);
       onClose();
     } catch (error) {
       console.error('Error saving DJ:', error);
@@ -204,7 +225,7 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
               />
             </div>
 
-            {/* Gênero e Especialidades */}
+            {/* Gênero, Cachê e Especialidades */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Gênero Principal"
@@ -212,7 +233,15 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
                 onChange={(e) => handleInputChange('genre', e.target.value)}
                 placeholder="House, Techno, etc..."
               />
-              
+
+              <Input
+                label="Cachê Base (R$)"
+                type="number"
+                value={formData.base_price}
+                onChange={(e) => handleInputChange('base_price', e.target.value)}
+                placeholder="5000"
+              />
+
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Especialidades
@@ -225,6 +254,13 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
                   className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
+
+              <Input
+                label="Gêneros Musicais (separe por vírgula)"
+                value={(formData.musical_genres || []).join(', ')}
+                onChange={(e) => setFormData(prev => ({ ...prev, musical_genres: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+                placeholder="House, Tech House, Techno"
+              />
             </div>
 
             {/* Redes Sociais */}
