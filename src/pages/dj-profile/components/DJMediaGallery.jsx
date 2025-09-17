@@ -6,7 +6,7 @@ import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import { mediaService } from '../../../services/mediaService';
 
-const DJMediaGallery = ({ djId, djName, isAdmin = false, onMediaUpdate }) => {
+const DJMediaGallery = ({ djId, djName, dj = null, isAdmin = false, onMediaUpdate }) => {
   const [mediaFiles, setMediaFiles] = useState({
     logo: [],
     presskit: [],
