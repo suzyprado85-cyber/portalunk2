@@ -350,9 +350,10 @@ const DJProfile = () => {
 
           {/* Mídia Tab */}
           {activeTab === 'media' && (
-            <DJMediaGallery 
-              djId={djId} 
+            <DJMediaGallery
+              djId={djId}
               djName={dj?.name}
+              dj={dj}
               isAdmin={isAdmin}
               onMediaUpdate={refetchMedia}
             />

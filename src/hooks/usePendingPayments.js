@@ -69,7 +69,16 @@ export const usePendingPayments = (filters = {}) => {
     }
 
     return filtered;
-  }, [payments, filters]);
+  }, [
+    payments,
+    filters?.djId,
+    filters?.producerId,
+    filters?.startDate,
+    filters?.endDate,
+    filters?.minAmount,
+    filters?.maxAmount,
+    filters?.search
+  ]);
 
   // Calculate overdue payments (payments older than 30 days)
   const overduePayments = useMemo(() => {

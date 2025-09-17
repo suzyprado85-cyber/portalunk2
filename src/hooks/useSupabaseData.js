@@ -11,14 +11,14 @@ export const useSupabaseData = (service, method, params = [], dependencies = [])
     setError(null);
     
     try {
-      console.log(`🔄 useSupabaseData: Buscando ${service?.name || 'dados'} com método ${method}`);
+      if (import.meta.env?.DEV) console.log(`🔄 useSupabaseData: Buscando ${service?.name || 'dados'} com método ${method}`);
       const result = await service?.[method](...params);
       
       if (result?.error) {
         console.error(`❌ useSupabaseData: Erro em ${method}:`, result.error);
         setError(result?.error);
       } else {
-        console.log(`✅ useSupabaseData: Dados recebidos para ${method}:`, result?.data?.length || 0, 'itens');
+        if (import.meta.env?.DEV) console.log(`✅ useSupabaseData: Dados recebidos para ${method}:`, result?.data?.length || 0, 'itens');
         setData(result?.data);
       }
     } catch (err) {

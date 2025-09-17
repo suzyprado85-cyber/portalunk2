@@ -4,9 +4,17 @@ import mediaServiceModule from './mediaService.js';
 import producerServiceModule from './producerService.js';
 
 // Helper function to handle errors
+const toMessage = (err) => {
+  if (!err) return 'Erro inesperado';
+  if (typeof err === 'string') return err;
+  if (typeof err.message === 'string' && err.message) return err.message;
+  if (typeof err.error_description === 'string') return err.error_description;
+  if (typeof err.details === 'string' && err.details) return err.details;
+  try { return JSON.stringify(err); } catch { return String(err); }
+};
 const handleError = (error, context) => {
-  console.error(`${context}:`, error);
-  return { error: error?.message || 'Erro inesperado' };
+  console.error(`${context}:`, toMessage(error));
+  return { error: toMessage(error) };
 };
 
 // Ensure current user has admin role
@@ -28,7 +36,7 @@ const ensureAdmin = async () => {
 // DJ SERVICES (Legacy - use djService.js)
 // ========================
 
-export const djService = {
+const djServiceLegacy = {
   // Get all DJs (active and inactive)
   async getAll() {
     try {
@@ -440,6 +448,8 @@ export const producerService = producerServiceModule;
 // ========================
 
 export const mediaService = mediaServiceModule;
+
+export const djService = djServiceModule;
 
 export default {
   dj: djServiceModule,

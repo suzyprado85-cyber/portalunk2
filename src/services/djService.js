@@ -2,9 +2,17 @@ import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 // Helper function to handle errors
+const toMessage = (err) => {
+  if (!err) return 'Erro inesperado';
+  if (typeof err === 'string') return err;
+  if (typeof err.message === 'string' && err.message) return err.message;
+  if (typeof err.error_description === 'string') return err.error_description;
+  if (typeof err.details === 'string' && err.details) return err.details;
+  try { return JSON.stringify(err); } catch { return String(err); }
+};
 const handleError = (error, context) => {
-  console.error(`${context}:`, error);
-  return { error: error?.message || 'Erro inesperado' };
+  console.error(`${context}:`, toMessage(error));
+  return { error: toMessage(error) };
 };
 
 // Ensure current user has admin role

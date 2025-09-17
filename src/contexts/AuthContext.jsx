@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }) => {
     if (!user) return { error: { message: 'No user logged in' } }
     
     try {
-      const { data, error } = await supabase?.from('user_profiles')?.update(updates)?.eq('id', user?.id)?.select()?.single()
+      const { data, error } = await supabase?.from('profiles')?.update(updates)?.eq('user_id', user?.id)?.select()?.single()
       if (!error) setUserProfile(data)
       return { data, error }
     } catch (error) {

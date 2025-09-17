@@ -23,7 +23,9 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
     twitter: '',
     profile_image_url: '',
     background_image_url: '',
-    is_active: true
+    is_active: true,
+    base_price: '',
+    musical_genres: []
   });
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -47,7 +49,9 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
         twitter: dj?.twitter || '',
         profile_image_url: dj?.profile_image_url || '',
         background_image_url: dj?.background_image_url || '',
-        is_active: dj?.is_active ?? true
+        is_active: dj?.is_active ?? true,
+        base_price: dj?.base_price ?? '',
+        musical_genres: dj?.musical_genres || []
       });
     }
   }, [dj]);
@@ -101,23 +105,45 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       console.log('Submitting DJ data:', { djId: dj?.id, formData });
-      
+
+      const payload = {
+        name: formData.name,
+        phone: formData.phone || null,
+        bio: formData.bio || null,
+        location: formData.location || null,
+        instagram: formData.instagram || null,
+        soundcloud: formData.soundcloud || null,
+        youtube: formData.youtube || null,
+        spotify: formData.spotify || null,
+        profile_image_url: formData.profile_image_url || null,
+        background_image_url: formData.background_image_url || null,
+        is_active: !!formData.is_active,
+        base_price: formData.base_price !== '' ? Number(formData.base_price) : null,
+        musical_genres: Array.isArray(formData.musical_genres) && formData.musical_genres.length > 0 ? formData.musical_genres : null
+      };
+
       if (dj?.id) {
-        const result = await djService.update(dj.id, formData);
+        const result = await djService.update(dj.id, payload);
         console.log('Update result:', result);
+        if (result?.error) {
+          toast?.error(typeof result.error === 'string' ? result.error : 'Erro ao atualizar DJ');
+          return;
+        }
         toast?.success('DJ atualizado com sucesso');
       } else {
-        const result = await djService.create(formData);
+        const result = await djService.create(payload);
         console.log('Create result:', result);
-        if (result?.data) {
-          toast?.success('DJ criado com sucesso! Estrutura de pastas configurada.');
+        if (result?.error) {
+          toast?.error(typeof result.error === 'string' ? result.error : 'Erro ao criar DJ');
+          return;
         }
+        toast?.success('DJ criado com sucesso! Estrutura de pastas configurada.');
       }
-      
-      onSave?.(formData);
+
+      onSave?.(payload);
       onClose();
     } catch (error) {
       console.error('Error saving DJ:', error);
@@ -158,14 +184,6 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
               />
               
               <Input
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="email@exemplo.com"
-              />
-              
-              <Input
                 label="Telefone"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
@@ -194,27 +212,22 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
               />
             </div>
 
-            {/* Gênero e Especialidades */}
+            {/* Cachê e Gêneros Musicais */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Gênero Principal"
-                value={formData.genre}
-                onChange={(e) => handleInputChange('genre', e.target.value)}
-                placeholder="House, Techno, etc..."
+                label="Cachê Base (R$)"
+                type="number"
+                value={formData.base_price}
+                onChange={(e) => handleInputChange('base_price', e.target.value)}
+                placeholder="5000"
               />
-              
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Especialidades
-                </label>
-                <input
-                  type="text"
-                  value={formData.specialties.join(', ')}
-                  onChange={(e) => handleSpecialtiesChange(e.target.value)}
-                  placeholder="House, Techno, Progressive (separados por vírgula)"
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
+
+              <Input
+                label="Gêneros Musicais (separe por vírgula)"
+                value={(formData.musical_genres || []).join(', ')}
+                onChange={(e) => setFormData(prev => ({ ...prev, musical_genres: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+                placeholder="House, Tech House, Techno"
+              />
             </div>
 
             {/* Redes Sociais */}
@@ -247,20 +260,6 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
                   value={formData.spotify}
                   onChange={(e) => handleInputChange('spotify', e.target.value)}
                   placeholder="https://open.spotify.com/artist/..."
-                />
-                
-                <Input
-                  label="Facebook"
-                  value={formData.facebook}
-                  onChange={(e) => handleInputChange('facebook', e.target.value)}
-                  placeholder="https://facebook.com/usuario"
-                />
-                
-                <Input
-                  label="Twitter"
-                  value={formData.twitter}
-                  onChange={(e) => handleInputChange('twitter', e.target.value)}
-                  placeholder="https://twitter.com/usuario"
                 />
               </div>
             </div>
