@@ -189,14 +189,6 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
               />
               
               <Input
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="email@exemplo.com"
-              />
-              
-              <Input
                 label="Telefone"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
