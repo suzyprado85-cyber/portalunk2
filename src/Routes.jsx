@@ -1,22 +1,22 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import ErrorBoundary from "./components/ErrorBoundary";
-import NotFound from "./pages/NotFound";
-import AdminDashboard from './pages/admin-dashboard';
-import CompanySettings from './pages/admin-dashboard/CompanySettings';
-import ContractManagement from './pages/contract-management';
-import DJManagement from './pages/dj-management';
-import EventCalendar from './pages/event-calendar';
-import FinancialTracking from './pages/financial-tracking';
-import ProducerDashboard from './pages/producer-dashboard';
-import ProducerManagement from './pages/producer-management/index.jsx';
-import DJProfile from './pages/dj-profile';
+import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from './contexts/AuthContext';
 
-// Auth Pages
-import Login from './pages/auth/Login';
-import Signup from './pages/auth/Signup';
+const AdminDashboard = lazy(() => import('./pages/admin-dashboard'));
+const CompanySettings = lazy(() => import('./pages/admin-dashboard/CompanySettings'));
+const ContractManagement = lazy(() => import('./pages/contract-management'));
+const DJManagement = lazy(() => import('./pages/dj-management'));
+const EventCalendar = lazy(() => import('./pages/event-calendar'));
+const FinancialTracking = lazy(() => import('./pages/financial-tracking'));
+const ProducerDashboard = lazy(() => import('./pages/producer-dashboard'));
+const ProducerManagement = lazy(() => import('./pages/producer-management/index.jsx'));
+const DJProfile = lazy(() => import('./pages/dj-profile'));
+const Login = lazy(() => import('./pages/auth/Login'));
+const Signup = lazy(() => import('./pages/auth/Signup'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 const Routes = () => {
   return (
@@ -24,28 +24,32 @@ const Routes = () => {
       <AuthProvider>
         <ErrorBoundary>
           <ScrollToTop />
-          <RouterRoutes>
-            {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            
-            {/* Dashboard Routes - Accessible in development mode */}
-            <Route path="/" element={<AdminDashboard />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
-            <Route path="/producer-dashboard" element={<ProducerDashboard />} />
-            
-            {/* Management Routes */}
-            <Route path="/contract-management" element={<ContractManagement />} />
-            <Route path="/dj-management" element={<DJManagement />} />
-            <Route path="/dj-profile/:djId" element={<DJProfile />} />
-            <Route path="/event-calendar" element={<EventCalendar />} />
-            <Route path="/financial-tracking" element={<FinancialTracking />} />
-            <Route path="/company-settings" element={<CompanySettings />} />
-            <Route path="/producer-management" element={<ProducerManagement />} />
-            
-            {/* 404 Page */}
-            <Route path="*" element={<NotFound />} />
-          </RouterRoutes>
+          <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          }>
+            <RouterRoutes>
+              {/* Public Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              
+              {/* Protected Routes */}
+              <Route path="/" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+              <Route path="/admin-dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+              <Route path="/producer-dashboard" element={<ProtectedRoute><ProducerDashboard /></ProtectedRoute>} />
+              <Route path="/contract-management" element={<ProtectedRoute><ContractManagement /></ProtectedRoute>} />
+              <Route path="/dj-management" element={<ProtectedRoute><DJManagement /></ProtectedRoute>} />
+              <Route path="/dj-profile/:djId" element={<ProtectedRoute><DJProfile /></ProtectedRoute>} />
+              <Route path="/event-calendar" element={<ProtectedRoute><EventCalendar /></ProtectedRoute>} />
+              <Route path="/financial-tracking" element={<ProtectedRoute><FinancialTracking /></ProtectedRoute>} />
+              <Route path="/company-settings" element={<ProtectedRoute><CompanySettings /></ProtectedRoute>} />
+              <Route path="/producer-management" element={<ProtectedRoute><ProducerManagement /></ProtectedRoute>} />
+              
+              {/* 404 Page */}
+              <Route path="*" element={<NotFound />} />
+            </RouterRoutes>
+          </Suspense>
         </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>

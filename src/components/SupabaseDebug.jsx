@@ -23,19 +23,19 @@ const SupabaseDebug = () => {
       }
 
       // Contar DJs
-      const { data: djs, error: djsError } = await supabase.from('djs').select('id', { count: 'exact' });
+      const { count: djsCountRes, error: djsError } = await supabase.from('djs').select('*', { count: 'exact', head: true });
       if (djsError) throw djsError;
-      setDjsCount(djs?.length || 0);
+      setDjsCount(djsCountRes || 0);
 
       // Contar produtores
-      const { data: producers, error: producersError } = await supabase.from('profiles').select('id', { count: 'exact' }).eq('role', 'producer');
+      const { count: producersCountRes, error: producersError } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'producer');
       if (producersError) throw producersError;
-      setProducersCount(producers?.length || 0);
+      setProducersCount(producersCountRes || 0);
 
       // Contar eventos
-      const { data: events, error: eventsError } = await supabase.from('events').select('id', { count: 'exact' });
+      const { count: eventsCountRes, error: eventsError } = await supabase.from('events').select('*', { count: 'exact', head: true });
       if (eventsError) throw eventsError;
-      setEventsCount(events?.length || 0);
+      setEventsCount(eventsCountRes || 0);
 
       setConnectionStatus('connected');
     } catch (err) {

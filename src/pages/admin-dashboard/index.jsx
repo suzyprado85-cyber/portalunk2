@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import RoleSidebar from '../../components/ui/RoleSidebar';
 import TopBar from '../../components/ui/TopBar';
 import BreadcrumbTrail from '../../components/ui/BreadcrumbTrail';
@@ -19,6 +20,7 @@ const AdminDashboard = () => {
   const [isSidebarHover, setIsSidebarHover] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Fetch real data from Supabase
   const { data: metrics, loading: metricsLoading } = useSupabaseData(
@@ -355,7 +357,9 @@ const AdminDashboard = () => {
         </main>
         
         {/* Debug Component */}
-        <SupabaseDebug />
+        {(import.meta.env?.DEV || import.meta.env?.VITE_DEBUG === 'true') && (
+          <SupabaseDebug />
+        )}
       </div>
     </AdminBackground>
   );

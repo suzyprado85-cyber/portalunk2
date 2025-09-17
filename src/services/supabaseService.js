@@ -28,7 +28,7 @@ const ensureAdmin = async () => {
 // DJ SERVICES (Legacy - use djService.js)
 // ========================
 
-export const djService = {
+const djServiceLegacy = {
   // Get all DJs (active and inactive)
   async getAll() {
     try {
@@ -440,6 +440,8 @@ export const producerService = producerServiceModule;
 // ========================
 
 export const mediaService = mediaServiceModule;
+
+export const djService = djServiceModule;
 
 export default {
   dj: djServiceModule,
