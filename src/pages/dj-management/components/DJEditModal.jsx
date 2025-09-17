@@ -111,18 +111,13 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
 
       const payload = {
         name: formData.name,
-        email: formData.email || null,
         phone: formData.phone || null,
         bio: formData.bio || null,
         location: formData.location || null,
-        genre: formData.genre || null,
-        specialties: Array.isArray(formData.specialties) ? formData.specialties : [],
         instagram: formData.instagram || null,
         soundcloud: formData.soundcloud || null,
         youtube: formData.youtube || null,
         spotify: formData.spotify || null,
-        facebook: formData.facebook || null,
-        twitter: formData.twitter || null,
         profile_image_url: formData.profile_image_url || null,
         background_image_url: formData.background_image_url || null,
         is_active: !!formData.is_active,
@@ -217,15 +212,8 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
               />
             </div>
 
-            {/* Gênero, Cachê e Especialidades */}
+            {/* Cachê e Gêneros Musicais */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Gênero Principal"
-                value={formData.genre}
-                onChange={(e) => handleInputChange('genre', e.target.value)}
-                placeholder="House, Techno, etc..."
-              />
-
               <Input
                 label="Cachê Base (R$)"
                 type="number"
@@ -233,19 +221,6 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
                 onChange={(e) => handleInputChange('base_price', e.target.value)}
                 placeholder="5000"
               />
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Especialidades
-                </label>
-                <input
-                  type="text"
-                  value={formData.specialties.join(', ')}
-                  onChange={(e) => handleSpecialtiesChange(e.target.value)}
-                  placeholder="House, Techno, Progressive (separados por vírgula)"
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
 
               <Input
                 label="Gêneros Musicais (separe por vírgula)"
@@ -285,20 +260,6 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
                   value={formData.spotify}
                   onChange={(e) => handleInputChange('spotify', e.target.value)}
                   placeholder="https://open.spotify.com/artist/..."
-                />
-                
-                <Input
-                  label="Facebook"
-                  value={formData.facebook}
-                  onChange={(e) => handleInputChange('facebook', e.target.value)}
-                  placeholder="https://facebook.com/usuario"
-                />
-                
-                <Input
-                  label="Twitter"
-                  value={formData.twitter}
-                  onChange={(e) => handleInputChange('twitter', e.target.value)}
-                  placeholder="https://twitter.com/usuario"
                 />
               </div>
             </div>
