@@ -184,7 +184,7 @@ const FinancialTracking = () => {
   };
 
   const handleClearFilters = () => {
-    setFilteredTransactions(mockTransactions);
+    setFilteredTransactions(transactions);
   };
 
   const handleExport = () => {
