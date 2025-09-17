@@ -3,8 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 const rawUrl = import.meta.env?.VITE_SUPABASE_URL;
 const rawKey = import.meta.env?.VITE_SUPABASE_ANON_KEY;
 
-const supabaseUrl = (typeof rawUrl === 'string' ? rawUrl : '').trim().replace(/^"+|"+$/g, '');
-const supabaseAnonKey = (typeof rawKey === 'string' ? rawKey : '').trim().replace(/^"+|"+$/g, '');
+const sanitize = (v) => (typeof v === 'string' ? v : '')
+  .trim()
+  .replace(/^\s*"+|"+\s*$/g, '') // strip surrounding quotes
+  .replace(/^=+/, ''); // strip any leading equals if mis-injected
+
+const supabaseUrl = sanitize(rawUrl);
+const supabaseAnonKey = sanitize(rawKey);
 
 const isValidUrl = /^https?:\/\//i.test(supabaseUrl);
 if (!isValidUrl || !supabaseAnonKey) {
