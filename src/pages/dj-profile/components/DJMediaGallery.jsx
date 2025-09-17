@@ -6,6 +6,18 @@ import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import { mediaService } from '../../../services/mediaService';
 
+// Helper to build social links safely
+const getSocialLink = (platform, username) => {
+  if (!username) return null;
+  const clean = `${username}`.trim();
+  const links = {
+    instagram: `https://instagram.com/${clean.replace('@', '')}`,
+    soundcloud: clean.startsWith('http') ? clean : `https://soundcloud.com/${clean}`,
+    youtube: clean.startsWith('http') ? clean : `https://youtube.com/${clean}`
+  };
+  return links[platform] || null;
+};
+
 const DJMediaGallery = ({ djId, djName, dj = null, isAdmin = false, onMediaUpdate }) => {
   const [mediaFiles, setMediaFiles] = useState({
     logo: [],
@@ -495,18 +507,6 @@ const DJMediaGallery = ({ djId, djName, dj = null, isAdmin = false, onMediaUpdat
       )}
     </div>
   );
-};
-
-// Helper to build social links safely
-const getSocialLink = (platform, username) => {
-  if (!username) return null;
-  const clean = `${username}`.trim();
-  const links = {
-    instagram: `https://instagram.com/${clean.replace('@', '')}`,
-    soundcloud: clean.startsWith('http') ? clean : `https://soundcloud.com/${clean}`,
-    youtube: clean.startsWith('http') ? clean : `https://youtube.com/${clean}`
-  };
-  return links[platform] || null;
 };
 
 export default DJMediaGallery;
