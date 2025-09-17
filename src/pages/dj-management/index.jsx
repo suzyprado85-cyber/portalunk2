@@ -8,7 +8,6 @@ import AdminBackground from '../../components/AdminBackground';
 import DJFilters from './components/DJFilters';
 import DJTable from './components/DJTable';
 import DJCards from './components/DJCards';
-import DJDetailModal from './components/DJDetailModal';
 import DJEditModal from './components/DJEditModal';
 import Pagination from './components/Pagination';
 import { useSupabaseData } from '../../hooks/useSupabaseData';
@@ -31,7 +30,6 @@ const DJManagement = () => {
     direction: 'asc'
   });
   const [selectedDJ, setSelectedDJ] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -146,8 +144,7 @@ const DJManagement = () => {
   };
 
   const handleViewDetails = (dj) => {
-    setSelectedDJ(dj);
-    setShowDetailModal(true);
+    navigate(`/dj-profile/${dj.id}`);
   };
 
   const handleManageAvailability = (dj) => {
@@ -280,14 +277,6 @@ const DJManagement = () => {
           />
         </div>
       </div>
-      {/* Detail Modal */}
-      <DJDetailModal
-        dj={selectedDJ}
-        isOpen={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        onEdit={handleEdit}
-        onManageAvailability={handleManageAvailability}
-      />
       
       {/* Edit Modal */}
       <DJEditModal
