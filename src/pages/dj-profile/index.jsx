@@ -183,7 +183,8 @@ const DJProfile = () => {
                     {dj.musical_genres.map((genre, index) => (
                       <span
                         key={index}
-                        className="px-4 py-2 bg-purple-600/80 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-purple-400/30"
+                        className="text-white text-sm font-medium rounded-full border border-purple-400/30"
+                        style={{ backdropFilter: 'blur(4px)', backgroundColor: 'rgba(41, 14, 66, 0.54)', padding: '2px 16px 5px' }}
                       >
                         {genre}
                       </span>
@@ -193,7 +194,7 @@ const DJProfile = () => {
 
                 {/* Social Links (discreet) - show only filled ones */}
                 {/* Redes sociais - pílulas no estilo solicitado */}
-                <div className="flex items-center justify-center lg:justify-start gap-3 flex-wrap text-gray-200 mb-2">
+                <div className="flex items-center justify-center lg:justify-start gap-3 flex-wrap text-gray-200 mb-[18px]">
                   {dj.soundcloud && (
                     <SocialPill id="soundcloud" name="SoundCloud" icon="SoundCloud" href={normalizeSocialUrl('soundcloud', dj.soundcloud)} />
                   )}
