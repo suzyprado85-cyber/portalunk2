@@ -15,7 +15,7 @@ export const paymentService = {
             location,
             cache_value,
             commission_percentage,
-            dj:djs(id, name, email),
+            dj:djs(id, name),
             producer:profiles(id, name, company_name, email)
           )
         `)
@@ -47,7 +47,7 @@ export const paymentService = {
             location,
             cache_value,
             producer_id,
-            dj:djs(id, name, email)
+            dj:djs(id, name)
           )
         `)
         .eq('event.producer_id', producerId)
