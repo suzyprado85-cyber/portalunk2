@@ -206,16 +206,25 @@ const DJMediaGallery = ({ djId }) => {
         <h3 className="text-lg font-semibold text-foreground">
           Galeria de Mídia {djName && `- ${djName}`}
         </h3>
-        {currentFiles.length > 0 && (
+        <div className="flex items-center gap-2">
+          {currentFiles.length > 0 && (
+            <Button
+              onClick={handleDownloadAll}
+              iconName="Download"
+              iconPosition="left"
+              variant="outline"
+            >
+              Baixar Tudo
+            </Button>
+          )}
           <Button
-            onClick={handleDownloadAll}
-            iconName="Download"
+            onClick={() => setShowShareModal(true)}
+            iconName="Share2"
             iconPosition="left"
-            variant="outline"
           >
-            Baixar Tudo
+            Compartilhar mídias
           </Button>
-        )}
+        </div>
       </div>
 
       {/* Folder Navigation */}
