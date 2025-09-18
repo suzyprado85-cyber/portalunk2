@@ -43,7 +43,7 @@ export default function PillActionButton({ color='purple', iconName='Share2', ch
       <span
         className={`inline-flex items-center justify-center w-7 h-7 rounded-full shadow-md`}
         style={{
-          backgroundImage: 'url(https://cdn.builder.io/api/v1/image/assets%2F0f853d9f9b554108a2a6db6f58cbee9d%2Fa599072001dd46028b941b5e798e6539)',
+          backgroundImage: 'url(https://cdn.builder.io/api/v1/image/assets%2F0f853d9f9b554108a2a6db6f58cbee9d%2Fc91455788a454e77862557660ba55374)',
           backgroundColor: 'rgba(103, 16, 229, 1)',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
