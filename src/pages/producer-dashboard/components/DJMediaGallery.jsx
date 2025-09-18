@@ -133,7 +133,7 @@ const DJMediaGallery = ({ djId }) => {
   const categoriesWithCounts = categories.map(cat => ({
     ...cat,
     count: mediaFiles[cat.id]?.length || 0
-  }));
+  })).filter(cat => cat.count > 0);
 
   if (loading) {
     return (
