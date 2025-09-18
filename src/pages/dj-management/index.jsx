@@ -6,7 +6,6 @@ import Button from '../../components/ui/Button';
 import AdminBackground from '../../components/AdminBackground';
 
 import DJFilters from './components/DJFilters';
-import DJTable from './components/DJTable';
 import DJCards from './components/DJCards';
 import DJEditModal from './components/DJEditModal';
 import Pagination from './components/Pagination';
@@ -17,7 +16,6 @@ const DJManagement = () => {
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [viewMode, setViewMode] = useState('table');
   const [isSidebarHover, setIsSidebarHover] = useState(false);
   const [filters, setFilters] = useState({
     search: '',
@@ -208,22 +206,6 @@ const DJManagement = () => {
                 </p>
               </div>
               <div className="flex items-center space-x-2">
-                {!isMobile && (
-                  <div className="flex items-center border border-border rounded-md">
-                    <Button
-                      variant={viewMode === 'table' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setViewMode('table')}
-                      iconName="Table"
-                    />
-                    <Button
-                      variant={viewMode === 'cards' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setViewMode('cards')}
-                      iconName="Grid3X3"
-                    />
-                  </div>
-                )}
                 <Button
                   onClick={handleAddDJ}
                   iconName="Plus"
@@ -242,29 +224,15 @@ const DJManagement = () => {
           />
 
           {/* Content */}
-          {viewMode === 'table' && !isMobile ? (
-            <DJTable
-              djs={paginatedDJs}
-              onSort={handleSort}
-              sortConfig={sortConfig}
-              onRowClick={handleRowClick}
-              onEdit={handleEdit}
-              onViewDetails={handleViewDetails}
-              onViewProfile={handleViewProfile}
-              onManageAvailability={handleManageAvailability}
-              onCreateEvent={handleCreateEvent}
-            />
-          ) : (
-            <DJCards
-              djs={paginatedDJs}
-              onRowClick={handleRowClick}
-              onEdit={handleEdit}
-              onViewDetails={handleViewDetails}
-              onViewProfile={handleViewProfile}
-              onManageAvailability={handleManageAvailability}
-              onCreateEvent={handleCreateEvent}
-            />
-          )}
+          <DJCards
+            djs={paginatedDJs}
+            onRowClick={handleRowClick}
+            onEdit={handleEdit}
+            onViewDetails={handleViewDetails}
+            onViewProfile={handleViewProfile}
+            onManageAvailability={handleManageAvailability}
+            onCreateEvent={handleCreateEvent}
+          />
 
           {/* Pagination */}
           <Pagination
