@@ -23,7 +23,8 @@ const CompanySettings = () => {
     bank_account: '',
     pix_key: '',
     contract_template: '',
-    payment_instructions: ''
+    payment_instructions: '',
+    avatar_url: ''
   });
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('company');
@@ -45,14 +46,30 @@ const CompanySettings = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      // Aqui você salvaria no Supabase
+      // If avatar file present in state (temporary), upload it
+      if (formData._avatarFile) {
+        const file = formData._avatarFile;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `company_avatar_${Date.now()}.${fileExt}`;
+        const path = `company/${fileName}`;
+        // use storageService to upload
+        const { data, error } = await storageService.uploadFile('avatars', path, file);
+        if (error) throw new Error(error);
+        formData.avatar_url = data?.publicUrl || data?.publicUrl;
+        // persist to localStorage for TopBar
+        try { localStorage.setItem('company_avatar_url', formData.avatar_url); } catch (e) {}
+        delete formData._avatarFile;
+      }
+
+      // Aqui você salvaria no Supabase (opcional)
       // await supabase.from('company_settings').upsert(formData);
-      
+
       // Por enquanto, vamos simular o salvamento
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       toast?.success('Configurações salvas com sucesso!');
     } catch (error) {
+      console.error('Erro ao salvar configurações:', error);
       toast?.error('Erro ao salvar configurações');
     } finally {
       setLoading(false);
@@ -62,6 +79,28 @@ const CompanySettings = () => {
   const renderCompanyTab = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Avatar da Empresa</label>
+          <div className="flex items-center gap-4">
+            <div className="w-20 h-20 rounded-full overflow-hidden border border-border bg-muted flex items-center justify-center">
+              {formData.avatar_url ? (
+                <img src={formData.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-muted-foreground">UNK</span>
+              )}
+            </div>
+            <div className="space-y-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleInputChange('_avatarFile', e?.target?.files?.[0])}
+                className="text-sm text-muted-foreground"
+              />
+              <p className="text-xs text-muted-foreground">Use uma imagem quadrada para melhores resultados</p>
+            </div>
+          </div>
+        </div>
+
         <Input
           label="Nome da Empresa"
           required
@@ -69,7 +108,7 @@ const CompanySettings = () => {
           onChange={(e) => handleInputChange('company_name', e.target.value)}
           placeholder="UNK ASSESSORIA"
         />
-        
+
         <Input
           label="CNPJ"
           required
