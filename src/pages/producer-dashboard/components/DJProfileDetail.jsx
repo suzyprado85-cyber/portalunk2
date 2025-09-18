@@ -26,22 +26,26 @@ const DJProfileDetail = ({ dj, onBack }) => {
 
   // Filtrar dados relacionados ao DJ específico
   const djEvents = useMemo(() => {
-    let filteredEvents = (events || []).filter(event => event?.dj?.id === dj?.id);
-    
+    let filteredEvents = (events || []).filter(event => {
+      const isPrimary = event?.dj?.id === dj?.id;
+      const isExtra = Array.isArray(event?.event_djs) && event.event_djs.some(ed => ed?.dj?.id === dj?.id);
+      return isPrimary || isExtra;
+    });
+
     // Aplicar filtro de data se definido
     if (dateFilter.startDate || dateFilter.endDate) {
       filteredEvents = filteredEvents.filter(event => {
         const eventDate = new Date(event?.event_date);
         const startDate = dateFilter.startDate ? new Date(dateFilter.startDate) : null;
         const endDate = dateFilter.endDate ? new Date(dateFilter.endDate) : null;
-        
+
         if (startDate && eventDate < startDate) return false;
         if (endDate && eventDate > endDate) return false;
-        
+
         return true;
       });
     }
-    
+
     return filteredEvents;
   }, [events, dj?.id, dateFilter]);
 
