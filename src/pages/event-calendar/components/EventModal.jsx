@@ -147,7 +147,7 @@ const EventModal = ({
         location: formData?.venue,
         city: formData?.city,
         description: formData?.description,
-        type: formData?.eventType || null,
+        event_type: formData?.eventType || null,
         producer_id: formData?.producerId,
         dj_id: Array.isArray(formData?.djIds) && formData?.djIds?.length > 0 ? formData?.djIds[0] : null,
         status: formData?.status,
