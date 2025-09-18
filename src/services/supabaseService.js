@@ -187,9 +187,39 @@ export const eventService = {
           delete cleaned[missingCol];
           const retry = await attemptInsert(cleaned);
           if (retry.error) return handleError(retry.error, 'Erro ao criar evento');
-          return { data: retry.data };
+          data = retry.data;
+          error = retry.error;
+        } else {
+          return handleError(error, 'Erro ao criar evento');
         }
-        return handleError(error, 'Erro ao criar evento');
+      }
+
+      // After event creation, ensure payment record exists when appropriate
+      try {
+        const createdEvent = data;
+        const isConfirmed = createdEvent?.status === 'confirmed' || eventData?.status === 'confirmed';
+        const cacheValue = createdEvent?.cache_value ?? eventData?.cache_value ?? null;
+        const cacheIsento = createdEvent?.cache_isento ?? eventData?.cache_isento ?? false;
+
+        if (isConfirmed && cacheValue != null && !cacheIsento && parseFloat(cacheValue) > 0) {
+          const commissionPct = (createdEvent?.commission_percentage != null) ? parseFloat(createdEvent.commission_percentage) : (eventData?.commission_percentage != null ? parseFloat(eventData.commission_percentage) : 10);
+          const commissionAmount = (parseFloat(cacheValue) * (commissionPct / 100));
+
+          // Create pending payment linked to event, producer and DJ
+          await supabase?.from('payments')?.insert({
+            event_id: createdEvent.id,
+            amount: parseFloat(cacheValue),
+            status: 'pending',
+            commission_percentage: commissionPct,
+            commission_amount: commissionAmount,
+            dj_id: createdEvent?.dj?.id || eventData?.dj_id || null,
+            producer_id: createdEvent?.producer?.id || eventData?.producer_id || null,
+            created_at: new Date().toISOString()
+          });
+        }
+      } catch (paymentErr) {
+        // Do not break event creation if payment creation fails; surface a warning
+        console.warn('Falha ao criar registro de pagamento vinculado ao evento:', paymentErr);
       }
 
       return { data };
@@ -223,9 +253,59 @@ export const eventService = {
           delete cleaned[missingCol];
           const retry = await attemptUpdate(cleaned);
           if (retry.error) return handleError(retry.error, 'Erro ao atualizar evento');
-          return { data: retry.data };
+          data = retry.data;
+          error = retry.error;
+        } else {
+          return handleError(error, 'Erro ao atualizar evento');
         }
-        return handleError(error, 'Erro ao atualizar evento');
+      }
+
+      // After update, ensure payment record reflects event state
+      try {
+        const updatedEvent = data;
+        const isConfirmed = updatedEvent?.status === 'confirmed' || updates?.status === 'confirmed';
+        const cacheValue = updatedEvent?.cache_value ?? updates?.cache_value ?? null;
+        const cacheIsento = updatedEvent?.cache_isento ?? updates?.cache_isento ?? false;
+
+        // Fetch existing payment linked to event (if any)
+        const { data: existingPayments } = await supabase?.from('payments')?.select('*')?.eq('event_id', id)?.limit(1);
+        const existing = (existingPayments && existingPayments.length > 0) ? existingPayments[0] : null;
+
+        if (isConfirmed && cacheValue != null && !cacheIsento && parseFloat(cacheValue) > 0) {
+          const commissionPct = (updatedEvent?.commission_percentage != null) ? parseFloat(updatedEvent.commission_percentage) : (updates?.commission_percentage != null ? parseFloat(updates.commission_percentage) : 10);
+          const commissionAmount = (parseFloat(cacheValue) * (commissionPct / 100));
+
+          if (!existing) {
+            // Create new pending payment
+            await supabase?.from('payments')?.insert({
+              event_id: id,
+              amount: parseFloat(cacheValue),
+              status: 'pending',
+              commission_percentage: commissionPct,
+              commission_amount: commissionAmount,
+              dj_id: updatedEvent?.dj?.id || updates?.dj_id || null,
+              producer_id: updatedEvent?.producer?.id || updates?.producer_id || null,
+              created_at: new Date().toISOString()
+            });
+          } else {
+            // If payment exists and is not paid, update amounts/commission
+            if (existing.status !== 'paid') {
+              await supabase?.from('payments')?.update({
+                amount: parseFloat(cacheValue),
+                commission_percentage: commissionPct,
+                commission_amount: commissionAmount,
+                updated_at: new Date().toISOString()
+              })?.eq('id', existing.id);
+            }
+          }
+        } else {
+          // If event is not confirmed or cache is isento, remove pending payment if exists
+          if (existing && existing.status !== 'paid') {
+            await supabase?.from('payments')?.delete()?.eq('id', existing.id);
+          }
+        }
+      } catch (paymentErr) {
+        console.warn('Falha ao sincronizar pagamento após atualização do evento:', paymentErr);
       }
 
       return { data };
