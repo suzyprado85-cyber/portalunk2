@@ -206,16 +206,34 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
                         )}
                       </div>
                       
-                      <Button
-                        onClick={() => openUploadModal(payment.id)}
-                        variant="outline"
-                        size="sm"
-                        iconName="Upload"
-                        iconPosition="left"
-                        disabled={!!payment?.payment_proof_url}
-                      >
-                        {payment?.payment_proof_url ? 'Comprovante Enviado' : 'Enviar Comprovante'}
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          onClick={() => openUploadModal(payment.id)}
+                          variant="outline"
+                          size="sm"
+                          iconName="Upload"
+                          iconPosition="left"
+                          disabled={!!payment?.payment_proof_url}
+                        >
+                          {payment?.payment_proof_url ? 'Comprovante Enviado' : 'Enviar Comprovante'}
+                        </Button>
+
+                        <Button
+                          onClick={async () => {
+                            if (!window.confirm('Confirmar baixa e marcar pagamento como pago?')) return;
+                            const res = await confirmPayments([payment.id], { payment_method: 'transferencia', paid_at: new Date().toISOString(), file: null });
+                            if (!res?.error) {
+                              onPaymentUpdate?.();
+                            }
+                          }}
+                          variant="default"
+                          size="sm"
+                          iconName="Check"
+                          disabled={payment?.status === 'paid'}
+                        >
+                          Dar Baixa
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
