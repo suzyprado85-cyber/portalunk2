@@ -133,13 +133,31 @@ export const eventService = {
   // Get all events
   async getAll() {
     try {
-      const { data, error } = await supabase?.from('events')?.select(`
+      // Try to fetch with optional many-to-many relation for multiple DJs (events_djs). Fallback to single-dj select when relation/table doesn't exist.
+      const attemptExtended = async () => {
+        return await supabase?.from('events')?.select(`
+          *,
+          dj:djs(id, name, profile_image_url, is_active),
+          producer:profiles(id, name, company_name),
+          events_djs:events_djs(
+            dj:djs(id, name, profile_image_url, is_active)
+          )
+        `)?.order('event_date', { ascending: false });
+      };
+
+      let { data, error } = await attemptExtended();
+
+      if (error) {
+        // Fallback without relation if not available
+        const basic = await supabase?.from('events')?.select(`
           *,
           dj:djs(id, name, profile_image_url, is_active),
           producer:profiles(id, name, company_name)
         `)?.order('event_date', { ascending: false });
-      
-      if (error) return handleError(error, 'Erro ao carregar eventos');
+        if (basic?.error) return handleError(basic.error, 'Erro ao carregar eventos');
+        data = basic?.data;
+      }
+
       return { data: data || [] };
     } catch (error) {
       return handleError(error, 'Erro de conexão ao carregar eventos');
@@ -149,13 +167,29 @@ export const eventService = {
   // Get events by producer
   async getByProducer(producerId) {
     try {
-      const { data, error } = await supabase?.from('events')?.select(`
+      const attemptExtended = async () => {
+        return await supabase?.from('events')?.select(`
           *,
-          dj:djs(id, name, profile_image_url),
+          dj:djs(id, name, profile_image_url, is_active),
+          producer:profiles(id, name, company_name),
+          events_djs:events_djs(
+            dj:djs(id, name, profile_image_url, is_active)
+          )
+        `)?.eq('producer_id', producerId)?.order('event_date', { ascending: false });
+      };
+
+      let { data, error } = await attemptExtended();
+
+      if (error) {
+        const basic = await supabase?.from('events')?.select(`
+          *,
+          dj:djs(id, name, profile_image_url, is_active),
           producer:profiles(id, name, company_name)
         `)?.eq('producer_id', producerId)?.order('event_date', { ascending: false });
-      
-      if (error) return handleError(error, 'Erro ao carregar eventos do produtor');
+        if (basic?.error) return handleError(basic.error, 'Erro ao carregar eventos do produtor');
+        data = basic?.data;
+      }
+
       return { data: data || [] };
     } catch (error) {
       return handleError(error, 'Erro de conexão ao carregar eventos do produtor');
