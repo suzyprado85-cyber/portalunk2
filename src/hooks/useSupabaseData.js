@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useState, useEffect, useCallback } from 'react';
 import { realtimeService } from '../services/supabaseService';
 
 export const useSupabaseData = (service, method, params = [], dependencies = []) => {
