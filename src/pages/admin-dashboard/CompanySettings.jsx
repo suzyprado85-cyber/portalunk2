@@ -32,6 +32,8 @@ const CompanySettings = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('company');
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [originalData, setOriginalData] = useState(null);
 
   const tabs = [
     { id: 'company', label: 'Dados da Empresa', icon: 'Building' },
@@ -50,22 +52,42 @@ const CompanySettings = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
+      // Upload avatar if new
       if (formData._avatarFile) {
         const file = formData._avatarFile;
         const fileExt = file.name.split('.').pop();
         const fileName = `company_avatar_${Date.now()}.${fileExt}`;
         const path = `company/${fileName}`;
-        const { data, error } = await storageService.uploadFile('dj-media', path, file);
+        const { data, error } = await storageService.uploadFile('company-avatars', path, file);
         if (error) throw new Error(error);
         const publicUrl = data?.publicUrl;
         setFormData(prev => ({ ...prev, avatar_url: publicUrl, avatar_url_preview: '' }));
         try { localStorage.setItem('company_avatar_url', publicUrl); } catch (e) {}
       }
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Persist company settings to Supabase (upsert)
+      try {
+        const payload = { ...formData };
+        // remove temporary fields
+        delete payload._avatarFile;
+        delete payload.avatar_url_preview;
+
+        const { data: upsertRes, error: upsertErr } = await supabase.from('company_settings').upsert(payload, { onConflict: ['company_name'] }).select().single();
+        if (upsertErr) {
+          // if table doesn't exist or other error, fall back to localStorage
+          console.warn('Falha ao salvar no Supabase, salvando localmente', upsertErr);
+          localStorage.setItem('company_settings', JSON.stringify(payload));
+        } else {
+          setFormData(prev => ({ ...prev, ...upsertRes }));
+        }
+      } catch (e) {
+        console.warn('Erro ao persistir configurações:', e);
+      }
 
       toast?.success('Configurações salvas com sucesso!');
       setSaveSuccess(true);
+      setEditing(false);
+      setOriginalData(formData);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
@@ -83,7 +105,7 @@ const CompanySettings = () => {
           <div className="flex items-center gap-4">
             <div className="w-20 h-20 rounded-full overflow-hidden border border-border bg-muted flex items-center justify-center">
               {(formData.avatar_url_preview || formData.avatar_url) ? (
-                <img src={formData.avatar_url_preview || formData.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                <img src={formData.avatar_url_preview || formData.avatar_url} alt="Avatar" className="w-full h-full object-cover object-center" />
               ) : (
                 <span className="text-muted-foreground">UNK</span>
               )}
@@ -92,6 +114,7 @@ const CompanySettings = () => {
               <input
                 type="file"
                 accept="image/*"
+                disabled={!editing}
                 onChange={(e) => {
                   const file = e?.target?.files?.[0];
                   if (!file) return;
@@ -111,6 +134,7 @@ const CompanySettings = () => {
           value={formData.company_name}
           onChange={(e) => handleInputChange('company_name', e.target.value)}
           placeholder="UNK ASSESSORIA"
+          disabled={!editing}
         />
 
         <Input
@@ -119,6 +143,7 @@ const CompanySettings = () => {
           value={formData.cnpj}
           onChange={(e) => handleInputChange('cnpj', e.target.value)}
           placeholder="12.345.678/0001-90"
+          disabled={!editing}
         />
         
         <Input
@@ -126,6 +151,7 @@ const CompanySettings = () => {
           value={formData.address}
           onChange={(e) => handleInputChange('address', e.target.value)}
           placeholder="Rua das Flores, 123"
+          disabled={!editing}
         />
         
         <Input
@@ -133,6 +159,7 @@ const CompanySettings = () => {
           value={formData.city}
           onChange={(e) => handleInputChange('city', e.target.value)}
           placeholder="São Paulo"
+          disabled={!editing}
         />
         
         <Input
@@ -140,6 +167,7 @@ const CompanySettings = () => {
           value={formData.state}
           onChange={(e) => handleInputChange('state', e.target.value)}
           placeholder="SP"
+          disabled={!editing}
         />
         
         <Input
@@ -147,6 +175,7 @@ const CompanySettings = () => {
           value={formData.zip_code}
           onChange={(e) => handleInputChange('zip_code', e.target.value)}
           placeholder="01234-567"
+          disabled={!editing}
         />
         
         <Input
@@ -154,6 +183,7 @@ const CompanySettings = () => {
           value={formData.phone}
           onChange={(e) => handleInputChange('phone', e.target.value)}
           placeholder="(11) 99999-9999"
+          disabled={!editing}
         />
         
         <Input
@@ -162,6 +192,7 @@ const CompanySettings = () => {
           value={formData.email}
           onChange={(e) => handleInputChange('email', e.target.value)}
           placeholder="contato@unkassessoria.com"
+          disabled={!editing}
         />
       </div>
     </div>
@@ -285,6 +316,54 @@ const CompanySettings = () => {
     };
   }, [formData.avatar_url_preview]);
 
+  // Load saved settings on mount
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        // Try Supabase table
+        const { data, error } = await supabase.from('company_settings').select('*').limit(1).single();
+        if (!error && data && mounted) {
+          setFormData(prev => ({ ...prev, ...data }));
+          setOriginalData({ ...prev, ...data });
+          return;
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      // Fallback to localStorage
+      try {
+        const raw = localStorage.getItem('company_settings');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (mounted) {
+            setFormData(prev => ({ ...prev, ...parsed }));
+            setOriginalData(parsed);
+          }
+        } else {
+          // check avatar url only
+          const avatar = localStorage.getItem('company_avatar_url');
+          if (avatar && mounted) setFormData(prev => ({ ...prev, avatar_url: avatar }));
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, []);
+
+  const handleEdit = () => {
+    setOriginalData({ ...formData });
+    setEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    if (originalData) setFormData(originalData);
+    setEditing(false);
+  };
+
   return (
     <AdminBackground>
       <div className="min-h-screen">
@@ -345,17 +424,16 @@ const CompanySettings = () => {
             )}
           </div>
 
-          {/* Save Button */}
-          <div className="mt-6 flex justify-end">
-            <Button
-              onClick={handleSave}
-              loading={loading}
-              iconName="Save"
-              iconPosition="left"
-              size="lg"
-            >
-              Salvar Configurações
-            </Button>
+          {/* Edit / Save Buttons */}
+          <div className="mt-6 flex justify-end space-x-3">
+            {!editing ? (
+              <Button onClick={handleEdit} iconName="Edit" iconPosition="left" size="lg">Editar</Button>
+            ) : (
+              <>
+                <Button onClick={handleCancelEdit} variant="outline" size="lg">Cancelar</Button>
+                <Button onClick={handleSave} loading={loading} iconName="Save" iconPosition="left" size="lg">Salvar Dados</Button>
+              </>
+            )}
           </div>
         </div>
         </main>
