@@ -339,7 +339,7 @@ const FinancialTracking = () => {
               transactions={filteredTransactions}
               onViewDetails={handleViewDetails}
               onProcessPayment={handleProcessPayment}
-              onUploadReceipt={handleUploadReceipt}
+              onDeleteTransaction={async (id) => { await deletePayment(id); }}
             />
           </div>
         </div>
