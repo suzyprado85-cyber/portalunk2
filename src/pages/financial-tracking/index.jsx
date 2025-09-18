@@ -14,7 +14,6 @@ import AdminBackground from '../../components/AdminBackground';
 import { useFinancialStats, usePendingPayments } from '../../hooks/usePendingPayments';
 
 const FinancialTracking = () => {
-  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [userRole] = useState('admin');
   const [isSidebarHover, setIsSidebarHover] = useState(false);
