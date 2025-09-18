@@ -5,15 +5,15 @@ import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import { Checkbox } from '../../../components/ui/Checkbox';
 
-const EventModal = ({ 
-  isOpen, 
-  onClose, 
-  event, 
-  onSave, 
+const EventModal = ({
+  isOpen,
+  onClose,
+  event,
+  onSave,
   onDelete,
   producers,
   djs,
-  selectedDate 
+  selectedDate
 }) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -26,6 +26,7 @@ const EventModal = ({
     djIds: [],
     status: 'pending',
     cache: '',
+    cacheIsento: false,
     commissionPercentage: '',
     advancePaid: false,
     advancePercentage: '',
@@ -120,7 +121,8 @@ const EventModal = ({
     if (!formData?.city?.trim()) newErrors.city = 'Cidade é obrigatória';
     if (!formData?.producerId) newErrors.producerId = 'Produtor é obrigatório';
     if (!Array.isArray(formData?.djIds) || formData?.djIds.length === 0) newErrors.djIds = 'Selecione pelo menos um DJ';
-    if (!formData?.cache || isNaN(parseFloat(formData?.cache))) newErrors.cache = 'Cachê é obrigatório';
+    // Cachê é obrigatório apenas quando não for isento
+    if (!formData?.cacheIsento && (!formData?.cache || isNaN(parseFloat(formData?.cache)))) newErrors.cache = 'Cachê é obrigatório, ou marque como isento';
 
     setErrors(newErrors);
     return Object.keys(newErrors)?.length === 0;
@@ -149,7 +151,8 @@ const EventModal = ({
         producer_id: formData?.producerId,
         dj_id: Array.isArray(formData?.djIds) && formData?.djIds?.length > 0 ? formData?.djIds[0] : null,
         status: formData?.status,
-        cache_value: formData?.cache ? parseFloat(formData?.cache) : null,
+        cache_value: formData?.cacheIsento ? null : (formData?.cache ? parseFloat(formData?.cache) : null),
+        cache_isento: !!formData?.cacheIsento,
         commission_percentage: formData?.commissionPercentage !== '' ? parseFloat(formData?.commissionPercentage) : null,
         requirements: `${requirementsNote}${formData?.requirements || ''}`.trim()
       };
@@ -307,14 +310,26 @@ const EventModal = ({
 
             {/* Cachê, Comissão e Pagamento Antecipado */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Input
-                label="Cachê (R$)"
-                type="number"
-                value={formData?.cache}
-                onChange={(e) => handleInputChange('cache', e?.target?.value)}
-                placeholder="0,00"
-                error={errors?.cache}
-              />
+              <div>
+                <Input
+                  label="Cachê (R$)"
+                  type="number"
+                  value={formData?.cache}
+                  onChange={(e) => handleInputChange('cache', e?.target?.value)}
+                  placeholder="0,00"
+                  error={errors?.cache}
+                  disabled={formData?.cacheIsento}
+                />
+                <div className="mt-2 flex items-center space-x-2">
+                  <input
+                    id="cacheIsento"
+                    type="checkbox"
+                    checked={!!formData?.cacheIsento}
+                    onChange={(e) => handleInputChange('cacheIsento', e.target.checked)}
+                  />
+                  <label htmlFor="cacheIsento" className="text-sm text-muted-foreground">Cachê isento</label>
+                </div>
+              </div>
 
               <Input
                 label="Comissão UNK (%)"
