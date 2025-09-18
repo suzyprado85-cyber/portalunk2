@@ -198,7 +198,15 @@ const ProducerManagement = () => {
       if (selectedAvatar) {
         setUploadingAvatar(true);
         try {
-          await producerService.uploadAvatar(editData.id, selectedAvatar);
+          const res = await producerService.uploadAvatar(editData.id, selectedAvatar);
+          if (res?.error) {
+            alert(`Erro ao atualizar avatar: ${res.error}`);
+            setUploadingAvatar(false);
+            return;
+          }
+          if (res?.data?.url) {
+            setFormData(prev => ({ ...prev, avatar_url: res.data.url }));
+          }
         } finally {
           setUploadingAvatar(false);
         }
