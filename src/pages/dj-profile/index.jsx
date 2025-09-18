@@ -171,34 +171,42 @@ const DJProfile = () => {
                   {dj.name}
                 </h1>
                 
-                <p className="text-xl text-gray-200 mb-6">
-                  DJ especializado em música eletrônica e eventos de alto padrão,
-                  {dj.bio ? ` ${dj.bio}` : ' com repertório diversificado.'}
-                </p>
+                {dj.bio && (
+                  <p className="text-xl text-gray-200 mb-6">{dj.bio}</p>
+                )}
 
-                {/* Tags de Gêneros Musicais - Como na imagem */}
-                <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-8">
-                  {dj.musical_genres?.map((genre, index) => (
-                    <span 
-                      key={index} 
-                      className="px-4 py-2 bg-purple-600/80 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-purple-400/30"
-                    >
-                      {genre}
-                    </span>
-                  )) || (
-                    <span className="px-4 py-2 bg-purple-600/80 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-purple-400/30">
-                      Electronic
-                    </span>
-                  )}
-                </div>
-
-                {/* Instagram Link - Como na imagem */}
-                {dj.instagram && (
-                  <div className="flex justify-center lg:justify-start items-center text-gray-200 mb-2">
-                    <Icon name="Instagram" size={16} className="mr-2" />
-                    <span className="text-sm">{dj.instagram}</span>
+                {/* Tags de Gêneros Musicais - Mostrar somente se existir */}
+                {Array.isArray(dj.musical_genres) && dj.musical_genres.length > 0 && (
+                  <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-8">
+                    {dj.musical_genres.map((genre, index) => (
+                      <span
+                        key={index}
+                        className="px-4 py-2 bg-purple-600/80 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-purple-400/30"
+                      >
+                        {genre}
+                      </span>
+                    ))}
                   </div>
                 )}
+
+                {/* Social Links (discreet) - show only filled ones */}
+                <div className="flex items-center justify-center lg:justify-start space-x-3 text-gray-200 mb-2">
+                  {dj.instagram && (
+                    <a href={getSocialLink('instagram', dj.instagram)} target="_blank" rel="noopener noreferrer" className="text-gray-200 hover:text-white text-sm flex items-center space-x-1">
+                      <Icon name="Instagram" size={16} />
+                    </a>
+                  )}
+                  {dj.soundcloud && (
+                    <a href={getSocialLink('soundcloud', dj.soundcloud)} target="_blank" rel="noopener noreferrer" className="text-gray-200 hover:text-white text-sm flex items-center space-x-1">
+                      <Icon name="Music" size={16} />
+                    </a>
+                  )}
+                  {dj.youtube && (
+                    <a href={getSocialLink('youtube', dj.youtube)} target="_blank" rel="noopener noreferrer" className="text-gray-200 hover:text-white text-sm flex items-center space-x-1">
+                      <Icon name="Play" size={16} />
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </div>
