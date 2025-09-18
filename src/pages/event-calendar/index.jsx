@@ -150,12 +150,12 @@ const EventCalendar = () => {
     }
   };
 
-  const handleSaveEvent = async (eventData) => {
+  const handleSaveEvent = async (payload) => {
     try {
       if (selectedEvent?.id) {
-        await eventService?.update(selectedEvent?.id, eventData);
+        await eventService?.update(selectedEvent?.id, payload);
       } else {
-        await eventService?.create(eventData);
+        await eventService?.create(payload);
       }
       await refetchEvents();
       setIsEventModalOpen(false);
