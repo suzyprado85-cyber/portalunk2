@@ -106,7 +106,7 @@ const DJProfileDetail = ({ dj, onBack }) => {
         <div 
           className="h-80 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 overflow-hidden relative"
           style={{
-            backgroundImage: dj?.background_image_url ? `url(${dj.background_image_url})` : 'none',
+            backgroundImage: (dj?.background_image_url || dj?.profile_image_url) ? `url(${dj?.background_image_url || dj?.profile_image_url})` : 'none',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
