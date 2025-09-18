@@ -140,9 +140,9 @@ const EventModal = ({
         producer_id: formData?.producerId,
         dj_id: Array.isArray(formData?.djIds) && formData?.djIds?.length > 0 ? formData?.djIds[0] : null,
         status: formData?.status,
-        cache_value: formData?.cacheIsento ? null : (formData?.cache ? parseFloat(formData?.cache) : null),
-        cache_isento: !!formData?.cacheIsento,
-        commission_percentage: formData?.commissionPercentage !== '' ? parseFloat(formData?.commissionPercentage) : null,
+        // cache_value must be NOT NULL in DB; use 0.00 to represent isento
+        cache_value: formData?.cacheIsento ? 0.00 : (formData?.cache ? parseFloat(formData?.cache) : 0.00),
+        commission_percentage: formData?.commissionPercentage !== '' ? parseFloat(formData?.commissionPercentage) : 20.00,
         requirements: `${requirementsNote}${formData?.requirements || ''}`.trim()
       };
 
