@@ -54,7 +54,14 @@ const ProducerDashboard = () => {
         specialties: dj?.specialties || [dj?.genre],
         bio: dj?.bio,
         profile_image_url: dj?.profile_image_url,
+        background_image_url: dj?.background_image_url,
+        // Redes sociais completas
         instagram: dj?.instagram,
+        soundcloud: dj?.soundcloud,
+        youtube: dj?.youtube,
+        spotify: dj?.spotify,
+        facebook: dj?.facebook,
+        twitter: dj?.twitter,
         is_active: dj?.is_active,
         experience: dj?.experience || null,
         rating: dj?.rating || 0,
@@ -212,5 +219,3 @@ const ProducerDashboard = () => {
 };
 
 export default ProducerDashboard;
-
-

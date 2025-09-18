@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import SocialPill from '../../../components/ui/SocialPill';
+import { normalizeSocialUrl } from '../../../utils/social';
 import DJMediaGallery from './DJMediaGallery';
 import SocialMediaCards from './SocialMediaCards';
 import PendingPaymentsManager from './PendingPaymentsManager';
@@ -140,51 +142,19 @@ const DJProfileDetail = ({ dj, onBack }) => {
               </h1>
               
              
-              {/* Links das redes sociais - igual à imagem */}
-              <div className="flex justify-center gap-3">
+              {/* Links das redes sociais - estilo pílula igual à imagem */}
+              <div className="flex justify-center gap-3 flex-wrap">
                 {dj?.soundcloud && (
-                  <a
-                    href={dj.soundcloud.startsWith('http') ? dj.soundcloud : `https://soundcloud.com/${dj.soundcloud}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 px-4 py-2 bg-orange-500/80 hover:bg-orange-500 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105"
-                  >
-                    <Icon name="Music" size={16} />
-                    <span>SoundCloud</span>
-                  </a>
+                  <SocialPill id="soundcloud" name="SoundCloud" icon="SoundCloud" href={normalizeSocialUrl('soundcloud', dj?.soundcloud)} />
                 )}
                 {dj?.instagram && (
-                  <a
-                    href={dj.instagram.startsWith('http') ? dj.instagram : `https://instagram.com/${dj.instagram.replace('@', '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 px-4 py-2 bg-[rgba(222,8,50,0.56)] text-white rounded-xl font-normal transition-all duration-200 hover:scale-105"
-                  >
-                    <Icon name="Instagram" size={16} />
-                    <span>Instagram</span>
-                  </a>
+                  <SocialPill id="instagram" name="Instagram" icon="Instagram" href={normalizeSocialUrl('instagram', dj?.instagram)} />
                 )}
                 {dj?.youtube && (
-                  <a
-                    href={dj.youtube.startsWith('http') ? dj.youtube : `https://youtube.com/${dj.youtube}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105"
-                  >
-                    <Icon name="Play" size={16} />
-                    <span>YouTube</span>
-                  </a>
+                  <SocialPill id="youtube" name="YouTube" icon="YouTube" href={normalizeSocialUrl('youtube', dj?.youtube)} />
                 )}
                 {dj?.spotify && (
-                  <a
-                    href={dj.spotify.startsWith('http') ? dj.spotify : `https://open.spotify.com/artist/${dj.spotify}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 px-4 py-2 bg-green-500/80 hover:bg-green-500 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105"
-                  >
-                    <Icon name="Music" size={16} />
-                    <span>Spotify</span>
-                  </a>
+                  <SocialPill id="spotify" name="Spotify" icon="Music" href={normalizeSocialUrl('spotify', dj?.spotify)} />
                 )}
               </div>
             </div>
@@ -200,11 +170,17 @@ const DJProfileDetail = ({ dj, onBack }) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-6 py-4 font-medium text-sm transition-all relative ${
+                className={`flex items-center space-x-2 px-6 py-4 text-sm transition-all relative ${
                   activeTab === tab.id
-                    ? 'text-white bg-gradient-to-r from-purple-600 to-blue-600'
+                    ? 'text-white font-semibold'
                     : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
                 } ${index === 0 ? 'rounded-l-lg' : ''} ${index === tabs.length - 1 ? 'rounded-r-lg' : ''}`}
+                style={activeTab === tab.id ? {
+                  backgroundImage: 'url(https://cdn.builder.io/api/v1/image/assets%2F0f853d9f9b554108a2a6db6f58cbee9d%2F7e3970ebf9a84e61baefb29192632951)',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'center',
+                  backgroundSize: 'cover'
+                } : undefined}
               >
                 <Icon name={tab.icon} size={18} />
                 <span>{tab.label}</span>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import PillActionButton from '../../../components/ui/PillActionButton';
 import { mediaService } from '../../../services/mediaService';
 import { djService } from '../../../services/djService';
 import { storageService } from '../../../services/supabaseService';
@@ -217,13 +218,13 @@ const DJMediaGallery = ({ djId }) => {
               Baixar Tudo
             </Button>
           )}
-          <Button
+          <PillActionButton
             onClick={() => setShowShareModal(true)}
             iconName="Share2"
-            iconPosition="left"
+            color="purple"
           >
             Compartilhar mídias
-          </Button>
+          </PillActionButton>
         </div>
       </div>
 

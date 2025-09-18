@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import PillActionButton from '../../../components/ui/PillActionButton';
 import Input from '../../../components/ui/Input';
 import { usePendingPayments } from '../../../hooks/usePendingPayments';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -208,27 +209,21 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
                       
                       <div className="flex items-center space-x-2">
                         {payment?.status === 'paid' ? (
-                          <Button variant="success" size="sm" iconName="Check" disabled>
+                          <PillActionButton color="green" iconName="Check" disabled>
                             Pago
-                          </Button>
+                          </PillActionButton>
                         ) : (payment?.status === 'processing' || payment?.payment_proof_url) ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="bg-blue-500 text-white border-blue-500 hover:bg-blue-600 hover:border-blue-600"
-                            disabled
-                          >
+                          <PillActionButton color="blue" iconName="Send" disabled>
                             Enviado Pagamento
-                          </Button>
+                          </PillActionButton>
                         ) : (
-                          <Button
-                            onClick={() => openUploadModal(payment.id)}
-                            variant="default"
-                            size="sm"
+                          <PillActionButton
+                            color={isOverdue(payment) ? 'red' : 'yellow'}
                             iconName="Check"
+                            onClick={() => openUploadModal(payment.id)}
                           >
                             Dar Baixa
-                          </Button>
+                          </PillActionButton>
                         )}
                       </div>
                     </div>
