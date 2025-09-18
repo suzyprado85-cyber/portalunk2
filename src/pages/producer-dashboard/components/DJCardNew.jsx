@@ -7,7 +7,7 @@ const DJCardNew = ({ dj, onViewDetails }) => {
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
-          src={dj?.background_image_url || dj?.profile_image_url || '/placeholder-dj.jpg'}
+          src={dj?.profile_image_url || '/placeholder-dj.jpg'}
           alt={dj?.name}
           className="w-full h-full object-cover opacity-60 group-hover:opacity-70 transition-opacity duration-300"
         />
