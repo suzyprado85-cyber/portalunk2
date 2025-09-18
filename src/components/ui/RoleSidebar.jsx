@@ -120,15 +120,15 @@ const RoleSidebar = ({ userRole = 'admin', isCollapsed = false, onToggleCollapse
     >
       <div className="flex flex-col h-full">
         {/* Logo Section */}
-        <div className="flex items-center justify-between p-4 pt-9 border-b" style={{ border: '1px solid rgba(62, 36, 110, 0.95)' }}>
+        <div className="flex items-center justify-between p-4 pt-9 border-b" style={{ border: '1px solid rgba(62, 36, 110, 0.37)' }}>
           <div className={`${isCollapsed ? 'hidden group-hover:flex' : 'flex'} items-center space-x-2`}>
-            <img src="/logo.png" alt="Portal UNK" className="w-8 h-8 rounded-md object-contain bg-transparent" />
+            <img src="/logo.png" alt="Portal UNK" className="w-10 h-10 rounded-md object-contain bg-transparent" />
             <div>
               <h1 className="text-lg font-semibold text-foreground">Portal UNK</h1>
             </div>
           </div>
           {isCollapsed && (
-            <img src="/logo.png" alt="Portal UNK" className="w-8 h-8 rounded-md object-contain bg-transparent mx-auto group-hover:hidden" />
+            <img src="/logo.png" alt="Portal UNK" className="w-10 h-10 rounded-md object-contain bg-transparent mx-auto group-hover:hidden" />
           )}
           {onToggleCollapse && (
             <button
@@ -146,7 +146,7 @@ const RoleSidebar = ({ userRole = 'admin', isCollapsed = false, onToggleCollapse
 
 
         {/* Navigation Items */}
-        <nav className="flex-1 p-4" style={{ boxShadow: '1px 1px 3px 0 rgba(72, 72, 72, 0.32)', textShadow: '1px 1px 3px rgba(0, 0, 0, 0.44)', margin: '16px 22px -6px 0', padding: '30px 16px 36px 11px' }}>
+        <nav className="flex-1 p-4" style={{ boxShadow: '1px 1px 3px 0 rgba(12, 12, 12, 0.99)', textShadow: '1px 1px 3px rgba(0, 0, 0, 0.44)', margin: '16px -3px -6px 0', padding: '30px 1px 36px 11px' }}>
           <ul className="space-y-2">
             {filteredItems?.map((item) => (
               <li key={item?.id}>
