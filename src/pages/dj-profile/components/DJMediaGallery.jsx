@@ -85,6 +85,17 @@ const DJMediaGallery = ({ djId, djName, dj = null, isAdmin = false, onMediaUpdat
       });
 
       setMediaFiles(grouped);
+
+      // If not admin, ensure selectedCategory points to a category with items
+      if (!isAdmin) {
+        const firstNonEmpty = Object.keys(grouped).find(k => (grouped[k] || []).length > 0);
+        if (firstNonEmpty) {
+          setSelectedCategory(prev => {
+            if ((grouped[prev] || []).length === 0) return firstNonEmpty;
+            return prev;
+          });
+        }
+      }
     } catch (error) {
       console.error('Erro ao carregar mídias:', error);
       toast.error('Erro ao carregar mídias do DJ');
