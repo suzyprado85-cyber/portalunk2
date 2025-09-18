@@ -43,7 +43,7 @@ const QuickActions = () => {
   ];
 
   const colorClasses = {
-    purple: 'bg-purple-600/10 hover:bg-purple-600/15',
+    purple: 'bg-[rgba(110,10,55,0.39)] hover:bg-[rgba(110,10,55,0.45)]',
     green: 'bg-green-600/10 hover:bg-green-600/15',
     blue: 'bg-blue-600/10 hover:bg-blue-600/15',
     amber: 'bg-amber-500/10 hover:bg-amber-500/15',
@@ -51,7 +51,7 @@ const QuickActions = () => {
   };
 
   const borderStyles = {
-    purple: '0.8px solid rgba(144, 5, 90, 0.68)',
+    purple: '1px solid rgba(146, 118, 135, 0.68)',
     green: '0.8px solid rgba(115, 234, 159, 0.64)',
     amber: '0.8px solid rgba(251, 216, 130, 0.71)',
     blue: '0.8px solid rgba(101, 144, 222, 1)'
@@ -77,7 +77,7 @@ const QuickActions = () => {
             iconName={action?.icon}
             iconPosition="left"
             className={[
-              'h-auto p-6 flex-col items-start text-left gap-1 min-h-[120px] rounded-xl border shadow-none backdrop-blur-xs',
+              'h-auto p-6 flex-col items-start text-left gap-1 min-h-[120px] rounded-xl border shadow-none backdrop-blur-[2px]',
               colorClasses[action.color] || 'bg-muted/10 hover:bg-muted/20'
             ].join(' ')}
             style={{ border: borderStyles[action.color] || undefined }}

@@ -39,6 +39,30 @@ const DJProfile = () => {
     return (events || []).filter(event => event?.dj_id === djId);
   }, [events, djId]);
 
+  // Auto-mark past events as completed (does not mark payments paid)
+  const [patchedCompleted, setPatchedCompleted] = useState({});
+  useEffect(() => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const toPatch = (djEvents || []).filter(e => {
+      const d = e?.event_date ? new Date(e.event_date) : null;
+      if (!d) return false;
+      d.setHours(0,0,0,0);
+      return d < today && e?.status !== 'completed' && !patchedCompleted[e?.id];
+    });
+    if (toPatch.length === 0) return;
+    (async () => {
+      for (const ev of toPatch) {
+        try {
+          await eventService.update(ev.id, { status: 'completed' });
+          setPatchedCompleted(prev => ({ ...prev, [ev.id]: true }));
+        } catch (e) {
+          console.warn('Falha ao atualizar status do evento para completed:', ev?.id, e);
+        }
+      }
+    })();
+  }, [djEvents, patchedCompleted]);
+
   const djContracts = useMemo(() => {
     return (contracts || []).filter(contract => 
       djEvents.find(event => event.id === contract?.event_id)
@@ -46,10 +70,36 @@ const DJProfile = () => {
   }, [contracts, djEvents]);
 
   const djPayments = useMemo(() => {
-    return (payments || []).filter(payment => 
+    return (payments || []).filter(payment =>
       djEvents.find(event => event.id === payment?.event_id)
     );
   }, [payments, djEvents]);
+
+  const pendingPayments = useMemo(() => (djPayments || []).filter(p => p.status !== 'paid'), [djPayments]);
+  const pendingAmount = useMemo(() => pendingPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0), [pendingPayments]);
+
+  const paymentsByEvent = useMemo(() => {
+    const map = {};
+    (djPayments || []).forEach(p => { if (p?.event_id) map[p.event_id] = p; });
+    return map;
+  }, [djPayments]);
+
+  const getPaymentStatusFor = (event) => {
+    if (!event) return 'pendente';
+    const cacheZero = event.cache_value == null || parseFloat(event.cache_value) === 0;
+    if (cacheZero) return 'isento';
+    const p = paymentsByEvent[event.id];
+    if (!p) return 'pendente';
+    if (p.status === 'paid') return 'pago';
+    if (p.status === 'processing') return 'processando';
+    return 'pendente';
+  };
+
+  const getPaymentBadgeClass = (status) => {
+    if (status === 'pago' || status === 'isento') return 'bg-green-600/20 text-green-400 border border-green-500/30';
+    if (status === 'processando') return 'bg-blue-600/20 text-blue-400 border border-blue-500/30';
+    return 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/30';
+  };
 
   // Obter imagem de fundo - prioritizar background_image_url
   const currentBackgroundImage = dj?.background_image_url || 
@@ -183,7 +233,8 @@ const DJProfile = () => {
                     {dj.musical_genres.map((genre, index) => (
                       <span
                         key={index}
-                        className="px-4 py-2 bg-purple-600/80 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-purple-400/30"
+                        className="text-white text-sm font-medium rounded-full border border-purple-400/30"
+                        style={{ backdropFilter: 'blur(4px)', backgroundColor: 'rgba(41, 14, 66, 0.54)', padding: '2px 16px 5px' }}
                       >
                         {genre}
                       </span>
@@ -193,7 +244,7 @@ const DJProfile = () => {
 
                 {/* Social Links (discreet) - show only filled ones */}
                 {/* Redes sociais - pílulas no estilo solicitado */}
-                <div className="flex items-center justify-center lg:justify-start gap-3 flex-wrap text-gray-200 mb-2">
+                <div className="flex items-center justify-center lg:justify-start gap-3 flex-wrap text-gray-200 mb-[18px]">
                   {dj.soundcloud && (
                     <SocialPill id="soundcloud" name="SoundCloud" icon="SoundCloud" href={normalizeSocialUrl('soundcloud', dj.soundcloud)} />
                   )}
@@ -300,6 +351,14 @@ const DJProfile = () => {
                                 {formatDate(event.event_date)}
                               </div>
                               <div className="flex items-center">
+                                <Icon
+                                  name={event.status === 'completed' ? 'CheckCircle' : (event.status === 'confirmed' ? 'BadgeCheck' : 'Clock')}
+                                  size={16}
+                                  className={`mr-2 ${event.status === 'completed' ? 'text-blue-400' : (event.status === 'confirmed' ? 'text-green-400' : 'text-yellow-400')}`}
+                                />
+                                {event.status === 'completed' ? 'Concluído' : (event.status === 'confirmed' ? 'Confirmado' : 'Pendente')}
+                              </div>
+                              <div className="flex items-center">
                                 <Icon name="MapPin" size={16} className="mr-2 text-green-400" />
                                 {event.location}, {event.city}
                               </div>
@@ -307,12 +366,8 @@ const DJProfile = () => {
                           </div>
                           <div className="text-right">
                             <p className="text-2xl font-bold text-white">{formatCurrency(event.cache_value)}</p>
-                            <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                              event.status === 'confirmed' 
-                                ? 'bg-green-600/20 text-green-400 border border-green-500/30' 
-                                : 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/30'
-                            }`}>
-                              {event.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
+                            <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getPaymentBadgeClass(getPaymentStatusFor(event))}`}>
+                              {getPaymentStatusFor(event) === 'pago' ? 'Pago' : getPaymentStatusFor(event) === 'isento' ? 'Isento' : getPaymentStatusFor(event) === 'processando' ? 'Processando' : 'Pendente'}
                             </div>
                           </div>
                         </div>
@@ -346,6 +401,14 @@ const DJProfile = () => {
                               {formatDate(event.event_date)}
                             </div>
                             <div className="flex items-center">
+                              <Icon
+                                name={event.status === 'completed' ? 'CheckCircle' : (event.status === 'confirmed' ? 'BadgeCheck' : 'Clock')}
+                                size={16}
+                                className={`mr-2 ${event.status === 'completed' ? 'text-blue-400' : (event.status === 'confirmed' ? 'text-green-400' : 'text-yellow-400')}`}
+                              />
+                              {event.status === 'completed' ? 'Concluído' : (event.status === 'confirmed' ? 'Confirmado' : 'Pendente')}
+                            </div>
+                            <div className="flex items-center">
                               <Icon name="MapPin" size={16} className="mr-2 text-green-400" />
                               {event.location}, {event.city}
                             </div>
@@ -354,12 +417,8 @@ const DJProfile = () => {
                         </div>
                         <div className="text-right">
                           <p className="text-2xl font-bold text-white">{formatCurrency(event.cache_value)}</p>
-                          <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mt-2 ${
-                            event.status === 'confirmed' 
-                              ? 'bg-green-600/20 text-green-400 border border-green-500/30' 
-                              : 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/30'
-                          }`}>
-                            {event.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
+                          <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mt-2 ${getPaymentBadgeClass(getPaymentStatusFor(event))}`}>
+                            {getPaymentStatusFor(event) === 'pago' ? 'Pago' : getPaymentStatusFor(event) === 'isento' ? 'Isento' : getPaymentStatusFor(event) === 'processando' ? 'Processando' : 'Pendente'}
                           </div>
                         </div>
                       </div>
@@ -385,7 +444,7 @@ const DJProfile = () => {
           {activeTab === 'financeiro' && (
             <div className="space-y-8">
               {/* Resumo Financeiro */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
                   <h4 className="text-lg font-semibold text-white mb-4">Total de Receita</h4>
                   <p className="text-3xl font-bold text-green-400">
@@ -398,6 +457,48 @@ const DJProfile = () => {
                     {djPayments.filter(p => p.status === 'paid').length}
                   </p>
                 </div>
+                <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
+                  <h4 className="text-lg font-semibold text-white mb-4">Pagamentos Pendentes</h4>
+                  <p className="text-3xl font-bold text-yellow-400">
+                    {pendingPayments.length}
+                  </p>
+                </div>
+                <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
+                  <h4 className="text-lg font-semibold text-white mb-4">Valor Pendente</h4>
+                  <p className="text-3xl font-bold text-amber-400">
+                    {formatCurrency(pendingAmount)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Lista de Pagamentos Pendentes */}
+              <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
+                <h4 className="text-lg font-semibold text-white mb-4">Pagamentos Pendentes</h4>
+                {pendingPayments.length === 0 ? (
+                  <p className="text-gray-400">Nenhum pagamento pendente</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingPayments.map((p) => (
+                      <div key={p.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                        <div className="flex-1">
+                          <div className="text-white font-medium">{p?.event?.title || 'Evento'}</div>
+                          <div className="text-sm text-gray-400">{p?.event?.event_date ? formatDate(p.event.event_date) : ''}</div>
+                        </div>
+                        <div className="flex items-center gap-3 mt-2 sm:mt-0">
+                          <span className="text-amber-400 font-semibold">{formatCurrency(parseFloat(p.amount) || 0)}</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${p.status === 'processing' ? 'bg-blue-600/20 text-blue-400 border-blue-500/30' : 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30'}`}>
+                            {p.status === 'processing' ? 'Processando' : 'Pendente'}
+                          </span>
+                          {p.payment_proof_url && (
+                            <a href={p.payment_proof_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">
+                              Comprovante
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Lista de Pagamentos */}

@@ -30,18 +30,6 @@ const MetricsCard = ({ title, value, change, changeType, icon, color = 'primary'
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
           <p className="text-2xl font-bold text-foreground">{value}</p>
-          {change && (
-            <div className="flex items-center mt-2">
-              <Icon 
-                name={changeType === 'positive' ? 'TrendingUp' : changeType === 'negative' ? 'TrendingDown' : 'Minus'} 
-                size={16} 
-                className={`mr-1 ${getChangeColor(changeType)}`}
-              />
-              <span className={`text-sm font-medium ${getChangeColor(changeType)}`}>
-                {change}
-              </span>
-            </div>
-          )}
           {clickable && (
             <div className="flex items-center mt-2 text-xs text-primary">
               <Icon name="ArrowRight" size={12} className="mr-1" />
