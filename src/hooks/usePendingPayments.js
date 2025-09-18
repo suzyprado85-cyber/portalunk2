@@ -19,7 +19,7 @@ export const usePendingPayments = (filters = {}) => {
 
   // Filter pending payments based on provided filters
   const filteredPayments = useMemo(() => {
-    let filtered = (payments || []).filter(payment => payment?.status === 'pending');
+    let filtered = (payments || []).filter(payment => payment?.status === 'pending' || payment?.status === 'processing');
 
     // Apply DJ filter
     if (filters?.djId) {
@@ -159,7 +159,7 @@ export const usePendingPayments = (filters = {}) => {
     };
   }, [filteredPayments, overduePayments]);
 
-  // Upload payment proof (producer can upload comprovante and mark as paid)
+  // Upload payment proof (producer envia comprovante; análise posterior faz a baixa)
   const uploadPaymentProof = useCallback(async (paymentId, file, description = '') => {
     if (!paymentId || !file) {
       toast.error('ID do pagamento e arquivo são obrigatórios');
@@ -168,12 +168,12 @@ export const usePendingPayments = (filters = {}) => {
 
     setUploadingProof(true);
     try {
-      // Generate unique file path
+      // Gerar caminho único do arquivo
       const fileExt = file.name.split('.').pop();
       const fileName = `payment_${paymentId}_${Date.now()}.${fileExt}`;
       const filePath = `payment-proofs/${fileName}`;
 
-      // Upload to Supabase Storage
+      // Upload para o Supabase Storage
       const { data: uploadData, error: uploadError } = await storageService.uploadFile(
         'payment-proofs',
         filePath,
@@ -184,22 +184,17 @@ export const usePendingPayments = (filters = {}) => {
         throw new Error(uploadError);
       }
 
-      // Confirm payment and attach proof (producer action)
-      const confirmResult = await paymentService.confirmPayment(paymentId, {
-        payment_method: 'transferencia',
-        paid_at: new Date().toISOString(),
-        proofUrl: uploadData.publicUrl
-      });
-
-      if (confirmResult?.error) {
-        throw new Error(confirmResult.error);
+      // Apenas anexar comprovante e acionar verificação automática; não marcar como pago aqui
+      const res = await paymentService.updateWithProof(paymentId, uploadData.publicUrl);
+      if (res?.error) {
+        throw new Error(res.error);
       }
 
-      // Refresh payments data
+      // Atualizar lista
       await refetchPayments();
 
-      toast.success('Comprovante enviado e pagamento marcado como pago!');
-      return { data: confirmResult.data };
+      toast.success('Comprovante enviado! Aguarde a análise e confirmação.');
+      return { data: res.data };
     } catch (error) {
       console.error('Erro ao enviar comprovante:', error);
       toast.error('Erro ao enviar comprovante: ' + error.message);

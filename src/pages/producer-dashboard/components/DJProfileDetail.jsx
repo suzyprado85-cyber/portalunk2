@@ -106,7 +106,7 @@ const DJProfileDetail = ({ dj, onBack }) => {
         <div 
           className="h-80 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 overflow-hidden relative"
           style={{
-            backgroundImage: dj?.background_image_url ? `url(${dj.background_image_url})` : 'none',
+            backgroundImage: (dj?.background_image_url || dj?.profile_image_url) ? `url(${dj?.background_image_url || dj?.profile_image_url})` : 'none',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
@@ -139,13 +139,7 @@ const DJProfileDetail = ({ dj, onBack }) => {
                 {dj?.name}
               </h1>
               
-              {/* Tag do gênero musical */}
-              <div className="flex justify-center mb-6">
-                <span className="px-4 py-2 bg-purple-600/80 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-purple-400/30">
-                  {(dj?.specialties && dj.specialties[0]) || dj?.genre || 'Electronic'}
-                </span>
-              </div>
-              
+             
               {/* Links das redes sociais - igual à imagem */}
               <div className="flex justify-center gap-3">
                 {dj?.soundcloud && (
@@ -164,7 +158,7 @@ const DJProfileDetail = ({ dj, onBack }) => {
                     href={dj.instagram.startsWith('http') ? dj.instagram : `https://instagram.com/${dj.instagram.replace('@', '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center space-x-2 px-4 py-2 bg-pink-500/80 hover:bg-pink-500 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105"
+                    className="flex items-center space-x-2 px-4 py-2 bg-[rgba(222,8,50,0.56)] text-white rounded-xl font-normal transition-all duration-200 hover:scale-105"
                   >
                     <Icon name="Instagram" size={16} />
                     <span>Instagram</span>

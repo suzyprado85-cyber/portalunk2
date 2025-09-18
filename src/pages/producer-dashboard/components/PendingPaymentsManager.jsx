@@ -181,59 +181,55 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
                       </div>
                       <div>
                         <p><strong>Criado em:</strong> {formatDate(payment?.created_at)}</p>
-                        <p><strong>Comissão UNK:</strong> {formatCurrency(payment?.commission_amount || 0)}</p>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          isOverdue(payment) 
-                            ? 'bg-red-500/20 text-red-500' 
-                            : 'bg-yellow-500/20 text-yellow-500'
-                        }`}>
-                          {isOverdue(payment) ? 'Em Atraso' : 'Pendente'}
-                        </span>
-                        {payment?.payment_proof_url && (
+                        {payment?.status === 'paid' ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-500">Pago</span>
+                        ) : (payment?.status === 'processing' || payment?.payment_proof_url) ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-500">Enviado</span>
+                        ) : (
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${isOverdue(payment) ? 'bg-red-500/20 text-red-500' : 'bg-yellow-500/20 text-yellow-500'}`}>{isOverdue(payment) ? 'Em Atraso' : 'Pendente'}</span>
+                        )}
+                        {payment?.status === 'paid' && payment?.payment_proof_url && (
                           <a
                             href={payment.payment_proof_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center text-blue-500 hover:text-blue-600 text-sm"
+                            className="inline-flex items-center text-primary hover:text-primary/80"
+                            title="Visualizar comprovante"
                           >
-                            <Icon name="FileText" size={14} className="mr-1" />
-                            Ver Comprovante
+                            <Icon name="Eye" size={16} />
                           </a>
                         )}
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <Button
-                          onClick={() => openUploadModal(payment.id)}
-                          variant="outline"
-                          size="sm"
-                          iconName="Upload"
-                          iconPosition="left"
-                          disabled={!!payment?.payment_proof_url}
-                        >
-                          {payment?.payment_proof_url ? 'Comprovante Enviado' : 'Enviar Comprovante'}
-                        </Button>
-
-                        <Button
-                          onClick={async () => {
-                            if (!window.confirm('Confirmar baixa e marcar pagamento como pago?')) return;
-                            const res = await confirmPayments([payment.id], { payment_method: 'transferencia', paid_at: new Date().toISOString(), file: null });
-                            if (!res?.error) {
-                              onPaymentUpdate?.();
-                            }
-                          }}
-                          variant="default"
-                          size="sm"
-                          iconName="Check"
-                          disabled={payment?.status === 'paid'}
-                        >
-                          Dar Baixa
-                        </Button>
+                        {payment?.status === 'paid' ? (
+                          <Button variant="success" size="sm" iconName="Check" disabled>
+                            Pago
+                          </Button>
+                        ) : (payment?.status === 'processing' || payment?.payment_proof_url) ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-blue-500 text-white border-blue-500 hover:bg-blue-600 hover:border-blue-600"
+                            disabled
+                          >
+                            Enviado Pagamento
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => openUploadModal(payment.id)}
+                            variant="default"
+                            size="sm"
+                            iconName="Check"
+                          >
+                            Dar Baixa
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -250,7 +246,7 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
           <div className="bg-card border border-border rounded-lg w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground">
-                Enviar Comprovante
+                Dar Baixa - Enviar Comprovante
               </h3>
               <Button
                 variant="ghost"
@@ -261,6 +257,16 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
             </div>
 
             <div className="space-y-4">
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-amber-200 text-sm">
+                <p className="font-semibold text-amber-300 mb-1">Instruções para Pagamento</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Realize o pagamento do valor total pendente deste evento.</li>
+                  <li>Faça o upload do comprovante.</li>
+                  <li>Para baixa automática é necessário que o comprovante esteja no CNPJ 59.839.507/0001-86 e o valor correto referente a esta pendência.</li>
+                  <li>Aguarde a análise e confirmação do pagamento.</li>
+                </ul>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Arquivo do Comprovante

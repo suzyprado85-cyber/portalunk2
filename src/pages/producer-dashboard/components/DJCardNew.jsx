@@ -16,27 +16,16 @@ const DJCardNew = ({ dj, onViewDetails }) => {
 
       {/* Content */}
       <div className="relative z-10 h-80 flex flex-col justify-end p-6">
-        {/* DJ Logo/Initial */}
-        <div className="absolute top-4 left-4 w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-          <span className="text-white font-bold text-sm">
-            {dj?.name?.charAt(0)?.toUpperCase()}
-          </span>
-        </div>
 
-        {/* DJ Info */}
-        <div className="space-y-2">
-          <h3 className="text-2xl font-bold text-white drop-shadow-lg" style={{ opacity: 0.65 }}>
+
+        <div className="mt-2 flex items-center justify-between gap-[9px]">
+          <h3 className="text-lg leading-6 font-semibold text-white drop-shadow-lg truncate flex-1 min-w-0" style={{ opacity: 0.62 }}>
             {dj?.name}
           </h3>
-
-        </div>
-
-        {/* Action Button */}
-        <div className="mt-4 flex justify-end">
           <Button
             onClick={() => onViewDetails(dj)}
             variant="outline"
-            className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 backdrop-blur-sm"
+            className="ml-auto shrink-0 h-[30px] text-xs font-normal leading-[18px] bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 backdrop-blur-sm"
           >
             Ver detalhes
           </Button>
