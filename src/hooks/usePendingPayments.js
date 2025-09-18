@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSupabaseData } from './useSupabaseData';
 import { eventService, djService, profileService, storageService } from '../services/supabaseService';
 import paymentService from '../services/paymentService';
