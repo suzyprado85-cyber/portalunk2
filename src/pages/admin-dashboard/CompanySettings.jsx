@@ -64,6 +64,8 @@ const CompanySettings = () => {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       toast?.success('Configurações salvas com sucesso!');
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
       toast?.error('Erro ao salvar configurações');
