@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
+import { storageService } from './supabaseService';
 
 // Helper function to handle errors
 const handleError = (error, context) => {
@@ -203,6 +204,36 @@ export const producerService = {
       return { data: { url: publicUrl } };
     } catch (error) {
       return handleError(error, 'Erro de conexão ao fazer upload');
+    }
+  },
+
+  // Change producer password via Edge Function
+  async changePassword(email, newPassword) {
+    try {
+      if (!email || !newPassword) return { error: 'Email e nova senha são obrigatórios' };
+
+      // Resolve user_id from profiles by email
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', email)
+        .single();
+      if (profileErr || !profile?.user_id) {
+        return { error: 'Usuário não encontrado para o email informado' };
+      }
+
+      const { data: resp, error } = await supabase.functions.invoke('update-user-password', {
+        body: { userId: profile.user_id, newPassword }
+      });
+
+      if (error || resp?.error) {
+        return { error: error?.message || resp?.error || 'Erro ao atualizar senha' };
+      }
+
+      toast.success('Senha atualizada com sucesso!');
+      return { data: { success: true } };
+    } catch (error) {
+      return handleError(error, 'Erro ao alterar senha');
     }
   },
 
