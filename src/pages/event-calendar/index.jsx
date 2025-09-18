@@ -47,6 +47,7 @@ const EventCalendar = () => {
       date: ev?.event_date,
       time: ev?.start_time || null,
       venue: ev?.location,
+      city: ev?.city,
       description: ev?.description,
       eventType: ev?.type || ev?.event_type || '',
       producerId: ev?.producer?.id,
