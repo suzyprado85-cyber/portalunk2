@@ -18,7 +18,7 @@ const ProducerCard = ({ producer, onView, onEdit, onChangePassword, onSelectDJ }
     if (typeof raw === 'string' && raw.startsWith('http')) return raw;
     // If value looks like a storage path, try common buckets
     try {
-      const candidates = ['avatars', 'producers', 'public'];
+      const candidates = ['producer-avatar', 'producer-avatars', 'avatars', 'producers', 'public'];
       for (const bucket of candidates) {
         const url = storageService.getPublicUrl(bucket, raw);
         if (url) return url;
