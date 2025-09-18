@@ -206,6 +206,7 @@ const CompanySettings = () => {
           value={formData.bank_name}
           onChange={(e) => handleInputChange('bank_name', e.target.value)}
           placeholder="Banco do Brasil"
+          disabled={!editing}
         />
         
         <Input
