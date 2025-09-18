@@ -28,7 +28,6 @@ const EventCalendar = () => {
   const [userRole] = useState('admin'); // This would come from auth context
   const [filters, setFilters] = useState({
     search: '',
-    eventType: '',
     status: '',
     producer: '',
     dj: ''
