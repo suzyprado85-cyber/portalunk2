@@ -192,7 +192,19 @@ const DJProfile = () => {
                 )}
 
                 {/* Social Links (discreet) - show only filled ones */}
-                <div className="flex items-center justify-center lg:justify-start space-x-3 text-gray-200 mb-2">
+                {/* Redes sociais - pílulas no estilo solicitado */}
+                <div className="flex items-center justify-center lg:justify-start gap-3 flex-wrap text-gray-200 mb-2">
+                  {dj.soundcloud && (
+                    <SocialPill id="soundcloud" name="SoundCloud" icon="SoundCloud" href={normalizeSocialUrl('soundcloud', dj.soundcloud)} />
+                  )}
+                  {dj.instagram && (
+                    <SocialPill id="instagram" name="Instagram" icon="Instagram" href={normalizeSocialUrl('instagram', dj.instagram)} />
+                  )}
+                  {dj.youtube && (
+                    <SocialPill id="youtube" name="YouTube" icon="YouTube" href={normalizeSocialUrl('youtube', dj.youtube)} />
+                  )}
+                </div>
+                <div className="flex items-center justify-center lg:justify-start space-x-3 text-gray-200 mb-2 hidden">
                   {dj.instagram && (
                     <a href={getSocialLink('instagram', dj.instagram)} target="_blank" rel="noopener noreferrer" className="text-gray-200 hover:text-white text-sm flex items-center space-x-1">
                       <Icon name="Instagram" size={16} />
