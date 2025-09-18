@@ -21,7 +21,6 @@ const EventModal = ({
     venue: '',
     city: '',
     description: '',
-    eventType: '',
     producerId: '',
     djIds: [],
     status: 'pending',
