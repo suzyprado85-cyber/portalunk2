@@ -79,6 +79,12 @@ const DJMediaGallery = ({ djId }) => {
         });
 
         setMediaFiles(newMediaFiles);
+
+        // If current selected category is empty, pick first non-empty
+        const firstNonEmpty = Object.keys(newMediaFiles).find(k => (newMediaFiles[k] || []).length > 0);
+        if (firstNonEmpty && (newMediaFiles[selectedCategory] || []).length === 0) {
+          setSelectedCategory(firstNonEmpty);
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar mídias:', error);
