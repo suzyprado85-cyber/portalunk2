@@ -43,8 +43,14 @@ const ProducerDashboard = () => {
       if (event?.dj?.id) {
         djIdsWithEvents.add(event.dj.id);
       }
+      if (Array.isArray(event?.event_djs)) {
+        event.event_djs.forEach(ed => {
+          const edj = ed?.dj;
+          if (edj?.id) djIdsWithEvents.add(edj.id);
+        });
+      }
     });
-    
+
     return (djs || [])
       .filter(dj => djIdsWithEvents.has(dj.id))
       .map(dj => ({
@@ -55,7 +61,6 @@ const ProducerDashboard = () => {
         bio: dj?.bio,
         profile_image_url: dj?.profile_image_url,
         background_image_url: dj?.background_image_url,
-        // Redes sociais completas
         instagram: dj?.instagram,
         soundcloud: dj?.soundcloud,
         youtube: dj?.youtube,

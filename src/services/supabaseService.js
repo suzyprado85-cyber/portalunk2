@@ -133,13 +133,31 @@ export const eventService = {
   // Get all events
   async getAll() {
     try {
-      const { data, error } = await supabase?.from('events')?.select(`
+      // Try to fetch with optional many-to-many relation for multiple DJs (events_djs). Fallback to single-dj select when relation/table doesn't exist.
+      const attemptExtended = async () => {
+        return await supabase?.from('events')?.select(`
+          *,
+          dj:djs(id, name, profile_image_url, is_active),
+          producer:profiles(id, name, company_name),
+          event_djs:event_djs(
+            dj:djs(id, name, profile_image_url, is_active)
+          )
+        `)?.order('event_date', { ascending: false });
+      };
+
+      let { data, error } = await attemptExtended();
+
+      if (error) {
+        // Fallback without relation if not available
+        const basic = await supabase?.from('events')?.select(`
           *,
           dj:djs(id, name, profile_image_url, is_active),
           producer:profiles(id, name, company_name)
         `)?.order('event_date', { ascending: false });
-      
-      if (error) return handleError(error, 'Erro ao carregar eventos');
+        if (basic?.error) return handleError(basic.error, 'Erro ao carregar eventos');
+        data = basic?.data;
+      }
+
       return { data: data || [] };
     } catch (error) {
       return handleError(error, 'Erro de conexão ao carregar eventos');
@@ -149,13 +167,29 @@ export const eventService = {
   // Get events by producer
   async getByProducer(producerId) {
     try {
-      const { data, error } = await supabase?.from('events')?.select(`
+      const attemptExtended = async () => {
+        return await supabase?.from('events')?.select(`
           *,
-          dj:djs(id, name, profile_image_url),
+          dj:djs(id, name, profile_image_url, is_active),
+          producer:profiles(id, name, company_name),
+          event_djs:event_djs(
+            dj:djs(id, name, profile_image_url, is_active)
+          )
+        `)?.eq('producer_id', producerId)?.order('event_date', { ascending: false });
+      };
+
+      let { data, error } = await attemptExtended();
+
+      if (error) {
+        const basic = await supabase?.from('events')?.select(`
+          *,
+          dj:djs(id, name, profile_image_url, is_active),
           producer:profiles(id, name, company_name)
         `)?.eq('producer_id', producerId)?.order('event_date', { ascending: false });
-      
-      if (error) return handleError(error, 'Erro ao carregar eventos do produtor');
+        if (basic?.error) return handleError(basic.error, 'Erro ao carregar eventos do produtor');
+        data = basic?.data;
+      }
+
       return { data: data || [] };
     } catch (error) {
       return handleError(error, 'Erro de conexão ao carregar eventos do produtor');
@@ -212,6 +246,25 @@ export const eventService = {
       // After event creation, ensure payment record exists when appropriate
       try {
         const createdEvent = data;
+
+        // Sync multiple DJs via join table if provided (best-effort; ignore if table doesn't exist)
+        try {
+          const incomingList = Array.isArray(eventData?.dj_ids) ? eventData.dj_ids : (Array.isArray(eventData?.djIds) ? eventData.djIds : []);
+          const primaryDjId = createdEvent?.dj?.id || eventData?.dj_id || null;
+          const extraDjIds = (incomingList || []).filter(id => String(id) !== String(primaryDjId));
+          if (createdEvent?.id && extraDjIds.length > 0) {
+            const rows = extraDjIds.map(djId => ({ event_id: createdEvent.id, dj_id: djId }));
+            const { error: jdErr } = await supabase?.from('event_djs')?.insert(rows);
+            if (jdErr) {
+              const msg = toMessage(jdErr);
+              if (!/relation\s+"?event_djs"?\s+does not exist/i.test(msg)) {
+                console.warn('Falha ao inserir DJs extras em event_djs:', jdErr);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Aviso ao sincronizar DJs extras (create):', e);
+        }
         const isConfirmed = createdEvent?.status === 'confirmed' || eventData?.status === 'confirmed';
         const cacheValue = createdEvent?.cache_value ?? eventData?.cache_value ?? null;
         // In DB schema cache_value is NOT NULL; a value of 0.00 means isento (no payment expected)
@@ -328,6 +381,37 @@ export const eventService = {
       // After update, ensure payment record reflects event state
       try {
         const updatedEvent = data;
+
+        // Sync multiple DJs via join table if provided (best-effort; ignore if table doesn't exist)
+        try {
+          const incomingList = Array.isArray(updates?.dj_ids) ? updates.dj_ids : (Array.isArray(updates?.djIds) ? updates.djIds : []);
+          const primaryDjId = updates?.dj_id ?? updatedEvent?.dj?.id ?? null;
+          if (updatedEvent?.id && Array.isArray(incomingList)) {
+            // Replace existing links with provided extras (excluding primary)
+            const { error: delErr } = await supabase?.from('event_djs')?.delete()?.eq('event_id', id);
+            if (delErr) {
+              const msg = toMessage(delErr);
+              if (!/relation\s+"?event_djs"?\s+does not exist/i.test(msg)) {
+                console.warn('Falha ao limpar vínculos event_djs:', delErr);
+              }
+            } else {
+              const extras = incomingList.filter(did => String(did) !== String(primaryDjId));
+              if (extras.length > 0) {
+                const rows = extras.map(djId => ({ event_id: id, dj_id: djId }));
+                const { error: insErr } = await supabase?.from('event_djs')?.insert(rows);
+                if (insErr) {
+                  const msg2 = toMessage(insErr);
+                  if (!/relation\s+"?event_djs"?\s+does not exist/i.test(msg2)) {
+                    console.warn('Falha ao inserir vínculos event_djs:', insErr);
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Aviso ao sincronizar DJs extras (update):', e);
+        }
+
         const isConfirmed = updatedEvent?.status === 'confirmed' || updates?.status === 'confirmed';
         const cacheValue = updatedEvent?.cache_value ?? updates?.cache_value ?? null;
         // Interpret cache_value === 0 as isento
