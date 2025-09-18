@@ -112,8 +112,7 @@ export const paymentService = {
           event:events(
             id,
             title,
-            cache_value,
-            commission_percentage
+            cache_value
           )
         `)
         .single();
