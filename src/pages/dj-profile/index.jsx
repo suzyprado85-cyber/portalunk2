@@ -39,6 +39,30 @@ const DJProfile = () => {
     return (events || []).filter(event => event?.dj_id === djId);
   }, [events, djId]);
 
+  // Auto-mark past events as completed (does not mark payments paid)
+  const [patchedCompleted, setPatchedCompleted] = useState({});
+  useEffect(() => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const toPatch = (djEvents || []).filter(e => {
+      const d = e?.event_date ? new Date(e.event_date) : null;
+      if (!d) return false;
+      d.setHours(0,0,0,0);
+      return d < today && e?.status !== 'completed' && !patchedCompleted[e?.id];
+    });
+    if (toPatch.length === 0) return;
+    (async () => {
+      for (const ev of toPatch) {
+        try {
+          await eventService.update(ev.id, { status: 'completed' });
+          setPatchedCompleted(prev => ({ ...prev, [ev.id]: true }));
+        } catch (e) {
+          console.warn('Falha ao atualizar status do evento para completed:', ev?.id, e);
+        }
+      }
+    })();
+  }, [djEvents, patchedCompleted]);
+
   const djContracts = useMemo(() => {
     return (contracts || []).filter(contract => 
       djEvents.find(event => event.id === contract?.event_id)
@@ -309,11 +333,11 @@ const DJProfile = () => {
                           <div className="text-right">
                             <p className="text-2xl font-bold text-white">{formatCurrency(event.cache_value)}</p>
                             <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                              event.status === 'confirmed' 
-                                ? 'bg-green-600/20 text-green-400 border border-green-500/30' 
+                              (event.status === 'confirmed' || event.status === 'completed')
+                                ? (event.status === 'completed' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'bg-green-600/20 text-green-400 border border-green-500/30')
                                 : 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/30'
                             }`}>
-                              {event.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
+                              {event.status === 'completed' ? 'Concluído' : (event.status === 'confirmed' ? 'Confirmado' : 'Pendente')}
                             </div>
                           </div>
                         </div>
@@ -356,11 +380,11 @@ const DJProfile = () => {
                         <div className="text-right">
                           <p className="text-2xl font-bold text-white">{formatCurrency(event.cache_value)}</p>
                           <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mt-2 ${
-                            event.status === 'confirmed' 
-                              ? 'bg-green-600/20 text-green-400 border border-green-500/30' 
+                            (event.status === 'confirmed' || event.status === 'completed')
+                              ? (event.status === 'completed' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'bg-green-600/20 text-green-400 border border-green-500/30')
                               : 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/30'
                           }`}>
-                            {event.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
+                            {event.status === 'completed' ? 'Concluído' : (event.status === 'confirmed' ? 'Confirmado' : 'Pendente')}
                           </div>
                         </div>
                       </div>
