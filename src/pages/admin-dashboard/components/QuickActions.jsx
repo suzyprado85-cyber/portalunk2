@@ -43,11 +43,18 @@ const QuickActions = () => {
   ];
 
   const colorClasses = {
-    purple: 'bg-purple-600/10 border-purple-500/20 hover:bg-purple-600/15',
-    green: 'bg-green-600/10 border-green-500/20 hover:bg-green-600/15',
-    blue: 'bg-blue-600/10 border-blue-500/20 hover:bg-blue-600/15',
-    amber: 'bg-amber-500/10 border-amber-400/20 hover:bg-amber-500/15',
-    rose: 'bg-rose-600/10 border-rose-500/20 hover:bg-rose-600/15'
+    purple: 'bg-purple-600/10 hover:bg-purple-600/15',
+    green: 'bg-green-600/10 hover:bg-green-600/15',
+    blue: 'bg-blue-600/10 hover:bg-blue-600/15',
+    amber: 'bg-amber-500/10 hover:bg-amber-500/15',
+    rose: 'bg-rose-600/10 hover:bg-rose-600/15'
+  };
+
+  const borderStyles = {
+    purple: '0.8px solid rgba(144, 5, 90, 0.68)',
+    green: '0.8px solid rgba(115, 234, 159, 0.64)',
+    amber: '0.8px solid rgba(251, 216, 130, 0.71)',
+    blue: '0.8px solid rgba(101, 144, 222, 1)'
   };
 
   const handleActionClick = (action) => {
@@ -71,8 +78,9 @@ const QuickActions = () => {
             iconPosition="left"
             className={[
               'h-auto p-6 flex-col items-start text-left gap-1 min-h-[120px] rounded-xl border shadow-none backdrop-blur-xs',
-              colorClasses[action.color] || 'bg-muted/10 border-border/30 hover:bg-muted/20'
+              colorClasses[action.color] || 'bg-muted/10 hover:bg-muted/20'
             ].join(' ')}
+            style={{ border: borderStyles[action.color] || undefined }}
             fullWidth
           >
             <div className="w-full">

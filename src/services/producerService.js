@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
+import { storageService } from './supabaseService';
 
 // Helper function to handle errors
 const handleError = (error, context) => {
@@ -178,31 +179,67 @@ export const producerService = {
   // Upload avatar
   async uploadAvatar(producerId, file) {
     try {
+      if (!file) return { error: 'Nenhum arquivo selecionado' };
       const fileExt = file.name.split('.').pop();
       const fileName = `${producerId}-${Date.now()}.${fileExt}`;
       const filePath = `producers/${fileName}`;
 
-      // Use storageService to upload to 'producer-avatar' bucket
-      const uploadRes = await storageService.uploadFile('producer-avatar', filePath, file);
+      // Bucket dedicado para produtores (conforme solicitado)
+      const bucket = 'producer-avatar';
+      const uploadRes = await storageService.uploadFile(bucket, filePath, file);
       if (uploadRes?.error) {
-        return handleError(uploadRes.error, 'Erro ao fazer upload da imagem');
+        const msg = typeof uploadRes.error === 'string' ? uploadRes.error : (uploadRes.error?.message || 'Falha no upload');
+        return { error: msg };
       }
 
       const publicUrl = uploadRes?.data?.publicUrl;
+      if (!publicUrl) return { error: 'Não foi possível obter URL pública do avatar' };
 
       // Update profile with avatar URL
       const { error: updateError } = await supabase?.from('profiles')?.update({
-        profile_image_url: publicUrl
+        avatar_url: publicUrl
       })?.eq('id', producerId);
 
       if (updateError) {
-        return handleError(updateError, 'Erro ao atualizar avatar');
+        const msg = updateError?.message || 'Erro ao atualizar avatar';
+        return { error: msg };
       }
 
       toast.success('Avatar atualizado com sucesso!');
       return { data: { url: publicUrl } };
     } catch (error) {
-      return handleError(error, 'Erro de conexão ao fazer upload');
+      const msg = error?.message || 'Erro de conexão ao fazer upload';
+      return { error: msg };
+    }
+  },
+
+  // Change producer password via Edge Function
+  async changePassword(email, newPassword) {
+    try {
+      if (!email || !newPassword) return { error: 'Email e nova senha são obrigatórios' };
+
+      // Resolve user_id from profiles by email
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', email)
+        .single();
+      if (profileErr || !profile?.user_id) {
+        return { error: 'Usuário não encontrado para o email informado' };
+      }
+
+      const { data: resp, error } = await supabase.functions.invoke('update-user-password', {
+        body: { userId: profile.user_id, newPassword }
+      });
+
+      if (error || resp?.error) {
+        return { error: error?.message || resp?.error || 'Erro ao atualizar senha' };
+      }
+
+      toast.success('Senha atualizada com sucesso!');
+      return { data: { success: true } };
+    } catch (error) {
+      return handleError(error, 'Erro ao alterar senha');
     }
   },
 
