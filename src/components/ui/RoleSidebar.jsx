@@ -113,13 +113,14 @@ const RoleSidebar = ({ userRole = 'admin', isCollapsed = false, onToggleCollapse
     <aside
       onMouseEnter={() => isCollapsed && onHoverChange?.(true)}
       onMouseLeave={() => isCollapsed && onHoverChange?.(false)}
-      className={`group fixed left-0 top-0 h-full bg-card/80 backdrop-blur-md border-r border-border/50 z-100 transition-all duration-300 ease-smooth ${
+      className={`group fixed left-0 top-0 h-full bg-card/80 z-100 transition-all duration-300 ease-smooth ${
         isCollapsed ? 'w-16 hover:w-60' : 'w-60'
-      }`}
+      } border-r`}
+      style={{ backdropFilter: 'blur(12px)', backgroundColor: 'rgba(22,24,29,0.8)', borderRightWidth: '0.8px', borderColor: 'rgba(44,49,58,0.5)' }}
     >
       <div className="flex flex-col h-full">
         {/* Logo Section */}
-        <div className="flex items-center justify-between p-4 border-b border-border/50">
+        <div className="flex items-center justify-between p-4 pt-9 border-b" style={{ border: '1px solid rgba(62, 36, 110, 0.95)' }}>
           <div className={`${isCollapsed ? 'hidden group-hover:flex' : 'flex'} items-center space-x-2`}>
             <img src="/logo.png" alt="Portal UNK" className="w-8 h-8 rounded-md object-contain bg-transparent" />
             <div>
@@ -145,7 +146,7 @@ const RoleSidebar = ({ userRole = 'admin', isCollapsed = false, onToggleCollapse
 
 
         {/* Navigation Items */}
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4" style={{ boxShadow: '1px 1px 3px 0 rgba(72, 72, 72, 0.32)', textShadow: '1px 1px 3px rgba(0, 0, 0, 0.44)', margin: '16px 22px -6px 0', padding: '30px 16px 36px 11px' }}>
           <ul className="space-y-2">
             {filteredItems?.map((item) => (
               <li key={item?.id}>
@@ -182,10 +183,10 @@ const RoleSidebar = ({ userRole = 'admin', isCollapsed = false, onToggleCollapse
 
 
         {/* Footer */}
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t" style={{ borderColor: 'rgb(44, 49, 58)' }}>
           {!isCollapsed ? (
             <div className="text-xs text-muted-foreground text-center">
-              <p>© 2025 Portal UNK</p>
+              <p>© Portal UNK</p>
               <p>Assessoria Musical</p>
             </div>
           ) : (
