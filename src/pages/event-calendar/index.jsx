@@ -48,7 +48,6 @@ const EventCalendar = () => {
       venue: ev?.location,
       city: ev?.city,
       description: ev?.description,
-      eventType: ev?.type || ev?.event_type || '',
       producerId: ev?.producer?.id,
       producer: ev?.producer?.name || ev?.producer?.company_name,
       djIds: ev?.dj ? [ev?.dj?.id] : [],
