@@ -30,6 +30,7 @@ const CompanySettings = () => {
   });
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('company');
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const tabs = [
     { id: 'company', label: 'Dados da Empresa', icon: 'Building' },
