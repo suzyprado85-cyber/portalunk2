@@ -292,7 +292,8 @@ export const eventService = {
         const updatedEvent = data;
         const isConfirmed = updatedEvent?.status === 'confirmed' || updates?.status === 'confirmed';
         const cacheValue = updatedEvent?.cache_value ?? updates?.cache_value ?? null;
-        const cacheIsento = updatedEvent?.cache_isento ?? updates?.cache_isento ?? false;
+        // Interpret cache_value === 0 as isento
+        const cacheIsExempt = cacheValue != null ? (parseFloat(cacheValue) === 0) : false;
 
         // Fetch existing payment linked to event (if any)
         const { data: existingPayments } = await supabase?.from('payments')?.select('*')?.eq('event_id', id)?.limit(1);
