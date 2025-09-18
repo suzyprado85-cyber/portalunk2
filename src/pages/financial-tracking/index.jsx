@@ -347,7 +347,7 @@ const FinancialTracking = () => {
       {/* Modals */}
       <ConfirmPaymentModal
         isOpen={confirmModalOpen}
-        onClose={() => setConfirmModalOpen(false)}
+        onClose={async () => { setConfirmModalOpen(false); await refetchPayments(); }}
         transactionIds={selectedTransactionIds}
       />
       <TransactionDetailsModal
