@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Lock, Mail, Play } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import VinylRecord from '../../components/VinylRecord';
 import toast from 'react-hot-toast';
 
@@ -29,8 +29,23 @@ const Login = () => {
       const { error: signInError } = await signIn(email, password);
       
       if (signInError) {
-        setError('Credenciais inválidas. Verifique seu email e senha.');
-        toast.error('Falha na autenticação. Tente novamente.');
+        const raw = String(signInError?.message || '');
+        let friendly = 'Falha na autenticação. Tente novamente.';
+        if (!isSupabaseConfigured) {
+          friendly = 'Configuração do Supabase ausente. Aguarde e tente novamente.';
+        } else if (/email\s*n[aã]o\s*confirmado/i.test(raw) || /not\s*confirmed/i.test(raw) || /confirm\s*your\s*email/i.test(raw)) {
+          friendly = 'Email não confirmado. Verifique sua caixa de entrada.';
+        } else if (/invalid\s*login\s*credentials/i.test(raw)) {
+          friendly = 'Email ou senha incorretos.';
+        } else if (/too\s*many\s*requests|rate\s*limit/i.test(raw)) {
+          friendly = 'Muitas tentativas. Aguarde alguns minutos.';
+        } else if (/network|fetch|timeout/i.test(raw)) {
+          friendly = 'Falha de rede. Verifique sua conexão.';
+        } else if (raw) {
+          friendly = raw;
+        }
+        setError(friendly);
+        toast.error(friendly);
       } else {
         // Fetch profile immediately to decide destination without waiting for context
         const userId = (await supabase?.auth?.getUser())?.data?.user?.id;
@@ -193,6 +208,30 @@ const Login = () => {
             </motion.button>
           </motion.div>
         </form>
+
+        <div className="mt-3 text-center">
+          <button
+            type="button"
+            disabled={loading || !email}
+            onClick={async () => {
+              try {
+                const { error: rpErr } = await supabase?.auth?.resetPasswordForEmail(email, {
+                  redirectTo: window?.location?.origin + '/login'
+                });
+                if (rpErr) {
+                  toast.error(rpErr?.message || 'Falha ao enviar link de recuperação.');
+                } else {
+                  toast.success('Enviamos um link de recuperação para seu email.');
+                }
+              } catch {
+                toast.error('Falha ao enviar link de recuperação.');
+              }
+            }}
+            className="text-gray-400 hover:text-gray-200 text-xs underline disabled:opacity-50"
+          >
+            Esqueci minha senha
+          </button>
+        </div>
 
         <motion.p
           className="text-gray-500 text-xs mt-4 text-center"
