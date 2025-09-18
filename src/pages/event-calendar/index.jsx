@@ -41,7 +41,7 @@ const EventCalendar = () => {
   // Normaliza eventos para o formato usado pelos componentes locais
   const events = useMemo(() => {
     return (rawEvents || [])?.map(ev => {
-      const extraDJs = Array.isArray(ev?.events_djs) ? ev.events_djs.map(ed => ed?.dj).filter(Boolean) : [];
+      const extraDJs = Array.isArray(ev?.event_djs) ? ev.event_djs.map(ed => ed?.dj).filter(Boolean) : [];
       const allDJs = [ev?.dj, ...extraDJs].filter(Boolean);
       const djIds = allDJs.map(d => d?.id).filter(Boolean);
       const djNames = allDJs.map(d => d?.name).filter(Boolean);
