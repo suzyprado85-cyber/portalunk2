@@ -30,10 +30,12 @@ const FinancialTracking = () => {
   
   // Use the financial hooks
   const financialStats = useFinancialStats();
-  const { 
-    payments, 
+  const {
+    payments,
     exportPayments,
-    formatCurrency 
+    formatCurrency,
+    deletePayment,
+    refetchPayments
   } = usePendingPayments();
 
   // Transform payments data to transaction format
