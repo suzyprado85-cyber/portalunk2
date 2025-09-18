@@ -179,17 +179,21 @@ export const producerService = {
   // Upload avatar
   async uploadAvatar(producerId, file) {
     try {
+      if (!file) return { error: 'Nenhum arquivo selecionado' };
       const fileExt = file.name.split('.').pop();
       const fileName = `${producerId}-${Date.now()}.${fileExt}`;
       const filePath = `producers/${fileName}`;
 
-      // Use storageService to upload to 'producer-avatar' bucket
-      const uploadRes = await storageService.uploadFile('producer-avatar', filePath, file);
+      // Use a known existing bucket in the app (dj-media). Folder keeps producers separated.
+      const bucket = 'dj-media';
+      const uploadRes = await storageService.uploadFile(bucket, filePath, file);
       if (uploadRes?.error) {
-        return handleError(uploadRes.error, 'Erro ao fazer upload da imagem');
+        const msg = typeof uploadRes.error === 'string' ? uploadRes.error : (uploadRes.error?.message || 'Falha no upload');
+        return { error: msg };
       }
 
       const publicUrl = uploadRes?.data?.publicUrl;
+      if (!publicUrl) return { error: 'Não foi possível obter URL pública do avatar' };
 
       // Update profile with avatar URL
       const { error: updateError } = await supabase?.from('profiles')?.update({
@@ -197,13 +201,15 @@ export const producerService = {
       })?.eq('id', producerId);
 
       if (updateError) {
-        return handleError(updateError, 'Erro ao atualizar avatar');
+        const msg = updateError?.message || 'Erro ao atualizar avatar';
+        return { error: msg };
       }
 
       toast.success('Avatar atualizado com sucesso!');
       return { data: { url: publicUrl } };
     } catch (error) {
-      return handleError(error, 'Erro de conexão ao fazer upload');
+      const msg = error?.message || 'Erro de conexão ao fazer upload';
+      return { error: msg };
     }
   },
 
