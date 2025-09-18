@@ -7,7 +7,8 @@ import Button from '../../components/ui/Button';
 import FinancialSummaryWidget from './components/FinancialSummaryWidget';
 import TransactionTable from './components/TransactionTable';
 import FinancialFilters from './components/FinancialFilters';
-import PaymentUploadModal from './components/PaymentUploadModal';
+// import PaymentUploadModal from './components/PaymentUploadModal';
+import ConfirmPaymentModal from './components/ConfirmPaymentModal';
 import TransactionDetailsModal from './components/TransactionDetailsModal';
 import TopBar from '../../components/ui/TopBar';
 import AdminBackground from '../../components/AdminBackground';
@@ -21,6 +22,7 @@ const FinancialTracking = () => {
   const [loading, setLoading] = useState(true);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [selectedTransactionIds, setSelectedTransactionIds] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
@@ -36,33 +38,43 @@ const FinancialTracking = () => {
 
   // Transform payments data to transaction format
   const transactions = useMemo(() => {
-    return (payments || [])?.map(payment => ({
-      id: payment?.id,
-      date: payment?.created_at,
-      eventName: payment?.event?.title || 'N/A',
-      eventType: payment?.event?.type || 'N/A',
-      eventDate: payment?.event?.event_date,
-      eventLocation: payment?.event?.location || 'N/A',
-      djName: payment?.event?.dj?.name || 'N/A',
-      djEmail: payment?.event?.dj?.email || 'N/A',
-      producerName: payment?.event?.producer?.name || payment?.event?.producer?.company_name || 'N/A',
-      producerEmail: payment?.event?.producer?.email || 'N/A',
-      totalAmount: parseFloat(payment?.amount || 0),
-      distribution: {
-        unkCommission: parseFloat(payment?.amount || 0) * 0.1, // 10% comissão UNK
-        djNet: parseFloat(payment?.amount || 0) * 0.9,        // 90% valor líquido para DJ
-        producer: 0 // Produtor não recebe nada, ele é quem paga
-      },
-      status: payment?.status || 'pending',
-      paymentMethod: payment?.payment_method || 'N/A',
-      dueDate: payment?.due_date,
-      paidDate: payment?.paid_at,
-      reference: payment?.reference || `TXN-${payment?.id}`,
-      contractId: payment?.contract_id || 'N/A',
-      contractStatus: payment?.contract?.signed ? 'Assinado' : 'Pendente',
-      updatedAt: payment?.updated_at || payment?.created_at,
-      attachments: payment?.attachments || []
-    }));
+    return (payments || [])?.map(payment => {
+      const amount = parseFloat(payment?.amount || 0);
+      const commissionPct = payment?.commission_percentage != null
+        ? parseFloat(payment?.commission_percentage)
+        : (payment?.event?.commission_percentage != null ? parseFloat(payment?.event?.commission_percentage) : 10);
+      const commissionAmt = payment?.commission_amount != null ? parseFloat(payment?.commission_amount) : (amount * (commissionPct / 100));
+      const djNetAmt = Math.max(amount - commissionAmt, 0);
+
+      return ({
+        id: payment?.id,
+        date: payment?.created_at,
+        eventName: payment?.event?.title || 'N/A',
+        eventType: payment?.event?.type || 'N/A',
+        eventDate: payment?.event?.event_date,
+        eventLocation: payment?.event?.location || 'N/A',
+        djName: payment?.event?.dj?.name || 'N/A',
+        djEmail: payment?.event?.dj?.email || 'N/A',
+        producerName: payment?.event?.producer?.name || payment?.event?.producer?.company_name || 'N/A',
+        producerEmail: payment?.event?.producer?.email || 'N/A',
+        totalAmount: amount,
+        distribution: {
+          unkCommission: commissionAmt,
+          djNet: djNetAmt,
+          producer: 0
+        },
+        status: payment?.status || 'pending',
+        paymentMethod: payment?.payment_method || 'N/A',
+        dueDate: payment?.due_date,
+        paidDate: payment?.paid_at,
+        reference: payment?.reference || `TXN-${payment?.id}`,
+        contractId: payment?.contract_id || 'N/A',
+        contractStatus: payment?.contract?.signed ? 'Assinado' : 'Pendente',
+        updatedAt: payment?.updated_at || payment?.created_at,
+        paymentProofUrl: payment?.payment_proof_url || null,
+        attachments: payment?.attachments || []
+      });
+    });
   }, [payments]);
 
   // Calculate summary data
@@ -143,14 +155,12 @@ const FinancialTracking = () => {
   };
 
   const handleProcessPayment = (transactionIds) => {
-    console.log('Processing payments for:', transactionIds);
-    // In a real app, this would update transaction statuses
+    if (!transactionIds || transactionIds.length === 0) return;
+    setSelectedTransactionIds(transactionIds);
+    setConfirmModalOpen(true);
   };
 
-  const handleUploadReceipt = (transactionIds) => {
-    setSelectedTransactionIds(transactionIds);
-    setUploadModalOpen(true);
-  };
+  const handleUploadReceipt = () => {};
 
   const handleUploadComplete = (uploadedFiles) => {
     console.log('Upload completed:', uploadedFiles);
@@ -208,14 +218,6 @@ const FinancialTracking = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Button
-                variant="outline"
-                iconName="Plus"
-                iconPosition="left"
-                onClick={() => navigate('/contract-management')}
-              >
-                Nova Transação
-              </Button>
               <Button
                 variant="default"
                 iconName="Download"
@@ -341,11 +343,10 @@ const FinancialTracking = () => {
         </div>
       </main>
       {/* Modals */}
-      <PaymentUploadModal
-        isOpen={uploadModalOpen}
-        onClose={() => setUploadModalOpen(false)}
+      <ConfirmPaymentModal
+        isOpen={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
         transactionIds={selectedTransactionIds}
-        onUploadComplete={handleUploadComplete}
       />
       <TransactionDetailsModal
         isOpen={detailsModalOpen}
