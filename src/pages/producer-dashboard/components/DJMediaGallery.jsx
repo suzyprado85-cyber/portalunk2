@@ -141,6 +141,49 @@ const DJMediaGallery = ({ djId }) => {
     count: mediaFiles[cat.id]?.length || 0
   })).filter(cat => cat.count > 0);
 
+  const sha256 = async (text) => {
+    const msgUint8 = new TextEncoder().encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+  };
+
+  const handleGenerateShare = async (e) => {
+    e?.preventDefault?.();
+    if (!djId || !djName) return;
+    if (!sharePassword || sharePassword.length < 4) {
+      toast.error('Defina uma senha com pelo menos 4 caracteres');
+      return;
+    }
+    setShareGenerating(true);
+    try {
+      const token = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+      const password_hash = await sha256(sharePassword);
+      const payload = {
+        token,
+        djId,
+        djName,
+        producerId: userProfile?.id || null,
+        createdAt: new Date().toISOString(),
+        password_hash
+      };
+      const path = `links/${token}.json`;
+      const { error } = await storageService.uploadJson('shared-links', path, payload);
+      if (error) {
+        toast.error('Erro ao gerar link compartilhado');
+        return;
+      }
+      const link = `${window.location.origin}/share/${token}`;
+      setShareUrl(link);
+      toast.success('Link gerado!');
+    } catch (err) {
+      toast.error('Falha ao gerar link');
+    } finally {
+      setShareGenerating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
