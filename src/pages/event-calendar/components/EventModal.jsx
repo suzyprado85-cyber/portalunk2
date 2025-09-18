@@ -129,7 +129,7 @@ const EventModal = ({
 
     try {
       const requirementsNote = formData?.advancePaid
-        ? `Pagamento de cach�� antecipado: ${formData?.advancePercentage || 0}%\n` : '';
+        ? `Pagamento de cachê antecipado: ${formData?.advancePercentage || 0}%\n` : '';
 
       const payload = {
         title: formData?.title,
@@ -201,13 +201,6 @@ const EventModal = ({
                 placeholder="Nome do evento"
               />
 
-              <Select
-                label="Tipo de Evento"
-                options={eventTypeOptions}
-                value={formData?.eventType}
-                onChange={(value) => handleInputChange('eventType', value)}
-                error={errors?.eventType}
-              />
 
               <Input
                 label="Data"
