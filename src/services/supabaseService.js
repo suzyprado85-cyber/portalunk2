@@ -631,27 +631,34 @@ export const storageService = {
   async uploadFile(bucket, path, file) {
     try {
       const attemptUpload = async () => {
-        const { data, error } = await supabase?.storage?.from(bucket)?.upload(path, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
+        const opts = { cacheControl: '3600', upsert: true };
+        try {
+          if (file && typeof file === 'object' && 'type' in file && file.type) {
+            opts.contentType = file.type;
+          }
+        } catch {}
+        const { data, error } = await supabase?.storage?.from(bucket)?.upload(path, file, opts);
         return { data, error };
       };
 
       // First attempt
       let { data, error } = await attemptUpload();
 
+      // Retry once on transient network errors
+      if (error && /Failed to fetch/i.test(toMessage(error))) {
+        await new Promise(r => setTimeout(r, 600));
+        const retryOnce = await attemptUpload();
+        data = retryOnce.data;
+        error = retryOnce.error;
+      }
+
       // If bucket not found, try to create it (best-effort). Creating a bucket may require elevated permissions; if it fails, return informative error.
       if (error && typeof error.message === 'string' && /bucket not found/i.test(error.message)) {
         try {
-          // Best-effort create bucket. This will likely fail on client-side if using anon key, but we try to give an automated fix when possible.
-          const { data: created, error: createErr } = await supabase?.storage?.createBucket(bucket, { public: true });
+          const { error: createErr } = await supabase?.storage?.createBucket(bucket, { public: true });
           if (createErr) {
-            // Surface a clear error to the caller
             return handleError(createErr, `Bucket "${bucket}" não encontrado e criação automática falhou. Crie o bucket manualmente no painel do Supabase.`);
           }
-
-          // Retry upload after creating bucket
           const retry = await attemptUpload();
           data = retry.data;
           error = retry.error;
@@ -660,14 +667,18 @@ export const storageService = {
         }
       }
 
-      if (error) return handleError(error, 'Erro ao fazer upload do arquivo');
+      if (error) {
+        if (/Failed to fetch/i.test(toMessage(error))) {
+          return handleError(error, 'Falha de rede ao enviar arquivo. Verifique conexão, URL/chave do Supabase e CORS do bucket.');
+        }
+        return handleError(error, 'Erro ao fazer upload do arquivo');
+      }
 
       // Get public URL
       const { data: { publicUrl } } = supabase?.storage?.from(bucket)?.getPublicUrl(data?.path);
 
       return { data: { ...data, publicUrl } };
     } catch (error) {
-      // If the error contains a bucket not found message, return a friendlier instruction
       if (error && error.message && /bucket not found/i.test(error.message)) {
         return handleError(error, `Bucket "${bucket}" não encontrado. Por favor crie o bucket no painel do Supabase ou verifique as permissões.`);
       }
