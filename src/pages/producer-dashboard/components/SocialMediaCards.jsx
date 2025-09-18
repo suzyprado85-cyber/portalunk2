@@ -16,7 +16,7 @@ const SocialMediaCards = ({ dj }) => {
       id: 'soundcloud',
       name: 'SoundCloud',
       icon: 'Music',
-      url: dj?.soundcloud,
+      url: normalizeSocialUrl('soundcloud', dj?.soundcloud),
       color: 'bg-gradient-to-r from-orange-500 to-red-500',
       hoverColor: 'hover:from-orange-600 hover:to-red-600'
     },
@@ -24,7 +24,7 @@ const SocialMediaCards = ({ dj }) => {
       id: 'youtube',
       name: 'YouTube',
       icon: 'Play',
-      url: dj?.youtube,
+      url: normalizeSocialUrl('youtube', dj?.youtube),
       color: 'bg-gradient-to-r from-red-500 to-red-600',
       hoverColor: 'hover:from-red-600 hover:to-red-700'
     },
@@ -32,7 +32,7 @@ const SocialMediaCards = ({ dj }) => {
       id: 'spotify',
       name: 'Spotify',
       icon: 'Music',
-      url: dj?.spotify,
+      url: normalizeSocialUrl('spotify', dj?.spotify),
       color: 'bg-gradient-to-r from-green-500 to-green-600',
       hoverColor: 'hover:from-green-600 hover:to-green-700'
     },
@@ -40,7 +40,7 @@ const SocialMediaCards = ({ dj }) => {
       id: 'facebook',
       name: 'Facebook',
       icon: 'Facebook',
-      url: dj?.facebook,
+      url: normalizeSocialUrl('facebook', dj?.facebook),
       color: 'bg-gradient-to-r from-blue-600 to-blue-700',
       hoverColor: 'hover:from-blue-700 hover:to-blue-800'
     },
@@ -48,7 +48,7 @@ const SocialMediaCards = ({ dj }) => {
       id: 'twitter',
       name: 'Twitter',
       icon: 'Twitter',
-      url: dj?.twitter,
+      url: normalizeSocialUrl('twitter', dj?.twitter),
       color: 'bg-gradient-to-r from-blue-400 to-blue-500',
       hoverColor: 'hover:from-blue-500 hover:to-blue-600'
     }
