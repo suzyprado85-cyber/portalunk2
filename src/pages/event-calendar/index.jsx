@@ -40,25 +40,32 @@ const EventCalendar = () => {
 
   // Normaliza eventos para o formato usado pelos componentes locais
   const events = useMemo(() => {
-    return (rawEvents || [])?.map(ev => ({
-      id: ev?.id,
-      title: ev?.title,
-      date: ev?.event_date,
-      time: ev?.start_time || null,
-      venue: ev?.location,
-      city: ev?.city,
-      description: ev?.description,
-      producerId: ev?.producer?.id,
-      producer: ev?.producer?.name || ev?.producer?.company_name,
-      djIds: ev?.dj ? [ev?.dj?.id] : [],
-      djs: ev?.dj ? [ev?.dj?.name] : [],
-      djIsActive: ev?.dj?.is_active ?? true,
-      status: ev?.status,
-      budget: ev?.cache_value,
-      expectedAttendance: ev?.expected_attendance,
-      contractId: ev?.contract_id,
-      requirements: ev?.requirements
-    }));
+    return (rawEvents || [])?.map(ev => {
+      const extraDJs = Array.isArray(ev?.events_djs) ? ev.events_djs.map(ed => ed?.dj).filter(Boolean) : [];
+      const allDJs = [ev?.dj, ...extraDJs].filter(Boolean);
+      const djIds = allDJs.map(d => d?.id).filter(Boolean);
+      const djNames = allDJs.map(d => d?.name).filter(Boolean);
+      const allActive = allDJs.every(d => (d?.is_active ?? true));
+      return ({
+        id: ev?.id,
+        title: ev?.title,
+        date: ev?.event_date,
+        time: ev?.start_time || null,
+        venue: ev?.location,
+        city: ev?.city,
+        description: ev?.description,
+        producerId: ev?.producer?.id,
+        producer: ev?.producer?.name || ev?.producer?.company_name,
+        djIds,
+        djs: djNames,
+        djIsActive: allActive,
+        status: ev?.status,
+        budget: ev?.cache_value,
+        expectedAttendance: ev?.expected_attendance,
+        contractId: ev?.contract_id,
+        requirements: ev?.requirements
+      });
+    });
   }, [rawEvents]);
 
   // Listas para filtros
