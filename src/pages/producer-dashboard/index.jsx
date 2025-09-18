@@ -43,8 +43,8 @@ const ProducerDashboard = () => {
       if (event?.dj?.id) {
         djIdsWithEvents.add(event.dj.id);
       }
-      if (Array.isArray(event?.events_djs)) {
-        event.events_djs.forEach(ed => {
+      if (Array.isArray(event?.event_djs)) {
+        event.event_djs.forEach(ed => {
           const edj = ed?.dj;
           if (edj?.id) djIdsWithEvents.add(edj.id);
         });
