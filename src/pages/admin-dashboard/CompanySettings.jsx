@@ -325,7 +325,7 @@ const CompanySettings = () => {
         const { data, error } = await supabase.from('company_settings').select('*').limit(1).single();
         if (!error && data && mounted) {
           setFormData(prev => ({ ...prev, ...data }));
-          setOriginalData({ ...prev, ...data });
+          setOriginalData(data);
           return;
         }
       } catch (e) {
