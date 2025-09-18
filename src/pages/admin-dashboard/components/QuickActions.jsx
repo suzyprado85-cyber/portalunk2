@@ -51,9 +51,10 @@ const QuickActions = () => {
   };
 
   const borderStyles = {
-    purple: '0.8px solid rgba(246, 33, 163, 0.68)',
+    purple: '0.8px solid rgba(144, 5, 90, 0.68)',
     green: '0.8px solid rgba(115, 234, 159, 0.64)',
-    amber: '0.8px solid rgba(251, 216, 130, 0.71)'
+    amber: '0.8px solid rgba(251, 216, 130, 0.71)',
+    blue: '0.8px solid rgba(101, 144, 222, 1)'
   };
 
   const handleActionClick = (action) => {
