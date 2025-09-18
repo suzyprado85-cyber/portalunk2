@@ -69,8 +69,10 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
     setUploadingImage(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${dj?.id || 'new'}_${type}_${Date.now()}.${fileExt}`;
-      const filePath = `dj-images/${fileName}`;
+      const nameSource = formData?.name || dj?.name || 'dj';
+      const djFolder = nameSource.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      const category = type === 'profile' ? 'profile' : 'background';
+      const filePath = `${djFolder}/${category}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
 
       const { data, error } = await storageService.uploadFile('dj-media', filePath, file);
 
@@ -79,7 +81,7 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
         return;
       }
 
-      const publicUrl = storageService.getPublicUrl('dj-media', filePath);
+      const publicUrl = data?.publicUrl || storageService.getPublicUrl('dj-media', filePath);
 
       setFormData(prev => ({
         ...prev,
