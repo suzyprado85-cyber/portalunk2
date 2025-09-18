@@ -1,6 +1,31 @@
 import { supabase } from '../lib/supabase';
 
 export const paymentService = {
+  // Update payment
+  async update(paymentId, updates) {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', paymentId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao atualizar pagamento:', error);
+        return { error: (error && error.message) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error)) };
+      }
+
+      return { data };
+    } catch (error) {
+      console.error('Erro de conexão ao atualizar pagamento:', error);
+      return { error: 'Erro de conexão' };
+    }
+  },
+
   // Buscar todos os pagamentos
   async getAll() {
     try {

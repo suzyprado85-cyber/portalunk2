@@ -158,6 +158,65 @@ export const eventService = {
         data = basic?.data;
       }
 
+      // Auto-update completed events based on date
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const eventsToUpdate = (data || []).filter(event => {
+        const eventDate = new Date(event.event_date);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate < today && event.status !== 'completed' && event.status !== 'cancelled';
+      });
+      
+      // Update events to completed status
+      for (const event of eventsToUpdate) {
+        try {
+          await supabase?.from('events')?.update({ status: 'completed' })?.eq('id', event.id);
+          // Update local data
+          const eventIndex = data.findIndex(e => e.id === event.id);
+          if (eventIndex !== -1) {
+            data[eventIndex].status = 'completed';
+          }
+        } catch (updateError) {
+          console.warn('Falha ao atualizar status do evento para completed:', event.id, updateError);
+        }
+      }
+      
+      // Auto-update overdue payments
+      const paymentsToUpdate = [];
+      for (const event of data || []) {
+        if (event.status === 'completed') {
+          const eventDate = new Date(event.event_date);
+          eventDate.setHours(23, 59, 59, 999);
+          
+          if (today > eventDate) {
+            // Check if there are pending payments for this event
+            const { data: pendingPayments } = await supabase
+              ?.from('payments')
+              ?.select('id, status')
+              ?.eq('event_id', event.id)
+              ?.in('status', ['pending', 'processing']);
+            
+            if (pendingPayments && pendingPayments.length > 0) {
+              paymentsToUpdate.push(...pendingPayments.map(p => p.id));
+            }
+          }
+        }
+      }
+      
+      // Update overdue payments
+      if (paymentsToUpdate.length > 0) {
+        try {
+          await supabase
+            ?.from('payments')
+            ?.update({ status: 'overdue' })
+            ?.in('id', paymentsToUpdate);
+          console.log(`✅ ${paymentsToUpdate.length} pagamentos marcados como atrasados`);
+        } catch (updateError) {
+          console.warn('Falha ao atualizar pagamentos para overdue:', updateError);
+        }
+      }
+
       return { data: data || [] };
     } catch (error) {
       return handleError(error, 'Erro de conexão ao carregar eventos');

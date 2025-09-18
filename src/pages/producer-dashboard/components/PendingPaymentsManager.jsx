@@ -38,6 +38,23 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
     producerId: userProfile?.id
   });
 
+  // Enhanced overdue detection for completed events
+  const isPaymentOverdue = (payment) => {
+    const eventDate = payment?.event?.event_date ? new Date(payment.event.event_date) : null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (eventDate) {
+      eventDate.setHours(23, 59, 59, 999);
+      // If event date has passed and payment is still pending/processing, it's overdue
+      if (today > eventDate && (payment?.status === 'pending' || payment?.status === 'processing')) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
+
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -202,7 +219,13 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
                         ) : (payment?.status === 'processing' || payment?.payment_proof_url) ? (
                           <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-500">Enviado</span>
                         ) : (
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${isOverdue(payment) ? 'bg-red-500/20 text-red-500' : 'bg-yellow-500/20 text-yellow-500'}`}>{isOverdue(payment) ? 'Em Atraso' : 'Pendente'}</span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            payment?.status === 'overdue' || isPaymentOverdue(payment) 
+                              ? 'bg-red-500/20 text-red-500' 
+                              : 'bg-yellow-500/20 text-yellow-500'
+                          }`}>
+                            {payment?.status === 'overdue' || isPaymentOverdue(payment) ? 'Em Atraso' : 'Pendente'}
+                          </span>
                         )}
                         {payment?.status === 'paid' && payment?.payment_proof_url && (
                           <a
@@ -228,7 +251,7 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
                           </PillActionButton>
                         ) : (
                           <PillActionButton
-                            color={isOverdue(payment) ? 'red' : 'yellow'}
+                            color={payment?.status === 'overdue' || isPaymentOverdue(payment) ? 'red' : 'yellow'}
                             iconName="Check"
                             onClick={() => openUploadModal(payment.id)}
                           >

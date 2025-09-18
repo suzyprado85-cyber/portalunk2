@@ -27,9 +27,12 @@ const DJProfileDetail = ({ dj, onBack }) => {
   // Filtrar dados relacionados ao DJ específico
   const djEvents = useMemo(() => {
     let filteredEvents = (events || []).filter(event => {
+      // Verificar se é do produtor atual E se o DJ está vinculado
+      const isProducerEvent = event?.producer?.id === userProfile?.id;
       const isPrimary = event?.dj?.id === dj?.id;
       const isExtra = Array.isArray(event?.event_djs) && event.event_djs.some(ed => ed?.dj?.id === dj?.id);
-      return isPrimary || isExtra;
+      
+      return isProducerEvent && (isPrimary || isExtra);
     });
 
     // Aplicar filtro de data se definido
@@ -47,7 +50,7 @@ const DJProfileDetail = ({ dj, onBack }) => {
     }
 
     return filteredEvents;
-  }, [events, dj?.id, dateFilter]);
+  }, [events, dj?.id, dateFilter, userProfile?.id]);
 
   const djContracts = useMemo(() => {
     return (contracts || []).filter(contract => contract?.event?.dj?.id === dj?.id);

@@ -38,11 +38,18 @@ const ProducerDashboard = () => {
 
   // Filtrar apenas DJs que têm eventos contratados com este produtor
   const contractedDJs = useMemo(() => {
+    // Filtrar eventos apenas do produtor atual
+    const producerEvents = (events || []).filter(event => 
+      event?.producer?.id === userProfile?.id
+    );
+    
     const djIdsWithEvents = new Set();
-    (events || []).forEach(event => {
+    producerEvents.forEach(event => {
+      // DJ principal do evento
       if (event?.dj?.id) {
         djIdsWithEvents.add(event.dj.id);
       }
+      // DJs extras vinculados via event_djs
       if (Array.isArray(event?.event_djs)) {
         event.event_djs.forEach(ed => {
           const edj = ed?.dj;
@@ -73,7 +80,7 @@ const ProducerDashboard = () => {
         status: dj?.is_active ? 'active' : 'inactive',
         availability: dj?.availability || 'available'
       }));
-  }, [djs, events]);
+  }, [djs, events, userProfile?.id]);
 
   // Handlers
   const handleViewDJDetails = (dj) => {

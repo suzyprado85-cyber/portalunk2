@@ -82,18 +82,19 @@ export const usePendingPayments = (filters = {}) => {
 
   // Calculate overdue payments: either older than 30 days OR event date passed for confirmed events without payment
   const overduePayments = useMemo(() => {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); // Start of today
 
     return filteredPayments.filter(payment => {
-      const paymentDate = new Date(payment?.created_at);
-
-      // Over 30 days since creation
-      if (paymentDate < thirtyDaysAgo) return true;
-
-      // Or event date passed and payment still pending
+      // Check if event date has passed and payment is still pending
       const eventDate = payment?.event?.event_date ? new Date(payment.event.event_date) : null;
-      if (eventDate && new Date() > eventDate && payment?.status === 'pending') return true;
+      if (eventDate) {
+        eventDate.setHours(23, 59, 59, 999); // End of event day
+        // If event date has passed and payment is still pending/processing, it's overdue
+        if (now > eventDate && (payment?.status === 'pending' || payment?.status === 'processing')) {
+          return true;
+        }
+      }
 
       return false;
     });
@@ -474,9 +475,17 @@ export const usePendingPayments = (filters = {}) => {
     formatDate: (date) => new Date(date).toLocaleDateString('pt-BR'),
     
     isOverdue: (payment) => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      return new Date(payment?.created_at) < thirtyDaysAgo;
+      const eventDate = payment?.event?.event_date ? new Date(payment.event.event_date) : null;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (eventDate) {
+        eventDate.setHours(23, 59, 59, 999);
+        // If event date has passed and payment is still pending/processing, it's overdue
+        return today > eventDate && (payment?.status === 'pending' || payment?.status === 'processing' || payment?.status === 'overdue');
+      }
+      
+      return payment?.status === 'overdue';
     }
   };
 };

@@ -185,6 +185,16 @@ const EventCalendar = () => {
     }
   };
 
+  // Listen for delete event from calendar
+  useEffect(() => {
+    const handleDeleteFromCalendar = (e) => {
+      handleDeleteEvent(e.detail);
+    };
+    
+    window.addEventListener('deleteEvent', handleDeleteFromCalendar);
+    return () => window.removeEventListener('deleteEvent', handleDeleteFromCalendar);
+  }, []);
+
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
   };

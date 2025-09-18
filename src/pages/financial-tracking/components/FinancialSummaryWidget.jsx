@@ -37,7 +37,9 @@ const FinancialSummaryWidget = ({ title, value, change, changeType, icon, color 
           <span className={`text-sm font-medium ${getChangeColor(changeType)}`}>
             {change}
           </span>
-          <span className="text-xs text-muted-foreground">vs mês anterior</span>
+          <span className="text-xs text-muted-foreground">
+            {changeType === 'neutral' ? '' : 'vs período anterior'}
+          </span>
         </div>
       )}
     </div>

@@ -255,11 +255,11 @@ const FinancialTracking = () => {
                 />
                 <FinancialSummaryWidget
                   title="Valores em Atraso"
-                  value={`${financialStats.overdueCount} pagamentos`}
-                  change={financialStats.overdueCount > 0 ? 'Ação necessária' : 'Em dia'}
-                  changeType={financialStats.overdueCount > 0 ? 'negative' : 'positive'}
+                  value={formatCurrency(financialStats.pendingRevenue)}
+                  change={`${financialStats.overdueCount} pagamentos atrasados`}
+                  changeType={financialStats.overdueCount > 0 ? 'negative' : 'neutral'}
                   icon="AlertCircle"
-                  color="accent"
+                  color="error"
                 />
               </>
             )}

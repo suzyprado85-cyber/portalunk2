@@ -84,7 +84,7 @@ const MonthlyCalendar = ({
             <div
               key={index}
               onClick={() => onDateClick(date)}
-              className={`min-h-[120px] p-2 border-r border-b border-border last:border-r-0 cursor-pointer transition-colors duration-150 ${
+              className={`min-h-[120px] p-2 border-r border-b border-border last:border-r-0 cursor-pointer transition-colors duration-150 group ${
                 isCurrentMonthDate
                   ? 'bg-background hover:bg-muted/50' :'bg-muted/30 text-muted-foreground'
               } ${
@@ -129,6 +129,45 @@ const MonthlyCalendar = ({
                     <div className="text-xs opacity-75 truncate">
                       {event?.time} - {event?.venue}
                     </div>
+                   {/* Botões discretos de ação */}
+                   <div className="flex items-center justify-between mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                     <div className="flex items-center space-x-1">
+                       <button
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           onEventClick(event);
+                         }}
+                         className="p-1 rounded bg-white/20 hover:bg-white/30 transition-colors"
+                         title="Ver detalhes"
+                       >
+                         <Icon name="Eye" size={10} className="text-white" />
+                       </button>
+                       <button
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           // Trigger edit mode
+                           onEventClick({ ...event, _editMode: true });
+                         }}
+                         className="p-1 rounded bg-white/20 hover:bg-white/30 transition-colors"
+                         title="Editar evento"
+                       >
+                         <Icon name="Edit" size={10} className="text-white" />
+                       </button>
+                       <button
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           if (window.confirm('Deseja excluir este evento?')) {
+                             // Handle delete - you'll need to pass this function down
+                             window.dispatchEvent(new CustomEvent('deleteEvent', { detail: event.id }));
+                           }
+                         }}
+                         className="p-1 rounded bg-red-500/60 hover:bg-red-500/80 transition-colors"
+                         title="Excluir evento"
+                       >
+                         <Icon name="Trash2" size={10} className="text-white" />
+                       </button>
+                     </div>
+                   </div>
                   </div>
                 ))}
                 {dayEvents?.length > 3 && (
