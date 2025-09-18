@@ -222,7 +222,7 @@ export const eventService = {
           const commissionAmount = (parseFloat(cacheValue) * (commissionPct / 100));
 
           // Create pending payment linked to event, producer and DJ
-          await supabase?.from('payments')?.insert({
+          const paymentPayload = {
             event_id: createdEvent.id,
             amount: parseFloat(cacheValue),
             status: 'pending',
@@ -231,7 +231,39 @@ export const eventService = {
             dj_id: createdEvent?.dj?.id || eventData?.dj_id || null,
             producer_id: createdEvent?.producer?.id || eventData?.producer_id || null,
             created_at: new Date().toISOString()
-          });
+          };
+
+          const insertPayment = async (payload) => {
+            try {
+              const { data: payData, error: payErr } = await supabase?.from('payments')?.insert(payload);
+              if (payErr) {
+                const msg = toMessage(payErr);
+                // handle typo or missing column for commission_percentage
+                if (/commission_percentage/i.test(msg) || /commission_percetage/i.test(msg)) {
+                  const alt = { ...payload };
+                  if (alt.commission_percentage !== undefined) {
+                    alt.commission_percetage = alt.commission_percentage;
+                    delete alt.commission_percentage;
+                  }
+                  const { data: d2, error: e2 } = await supabase?.from('payments')?.insert(alt);
+                  if (e2) throw e2;
+                  return d2;
+                }
+                // fallback: try without commission fields
+                const cleaned = { ...payload };
+                delete cleaned.commission_percentage;
+                delete cleaned.commission_amount;
+                const { data: d3, error: e3 } = await supabase?.from('payments')?.insert(cleaned);
+                if (e3) throw e3;
+                return d3;
+              }
+              return payData;
+            } catch (e) {
+              throw e;
+            }
+          };
+
+          await insertPayment(paymentPayload);
         }
       } catch (paymentErr) {
         // Do not break event creation if payment creation fails; surface a warning
