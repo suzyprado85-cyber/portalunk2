@@ -82,13 +82,36 @@ export const paymentService = {
         `)
         .eq('event.producer_id', producerId)
         .order('created_at', { ascending: false });
-      
+
       if (error) {
         console.error('Erro ao buscar pagamentos do produtor:', error);
         return { error: (error && error.message) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error)) };
       }
-      
-      return { data: data || [] };
+
+      const list = data || [];
+      // Auto-mark overdue: if event date passed and status is pending/processing
+      const dateOnlyToLocal = (s) => {
+        if (!s) return null;
+        const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m) return new Date(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10));
+        const d = new Date(s); return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      };
+      const today = new Date(); today.setHours(0,0,0,0);
+      const toOverdue = list.filter(p => {
+        const evd = dateOnlyToLocal(p?.event?.event_date);
+        if (!evd) return false; evd.setHours(23,59,59,999);
+        return (p?.status === 'pending' || p?.status === 'processing') && today > evd;
+      }).map(p => p.id);
+      if (toOverdue.length > 0) {
+        try {
+          await supabase.from('payments').update({ status: 'overdue', updated_at: new Date().toISOString() }).in('id', toOverdue);
+          for (const p of list) if (toOverdue.includes(p.id)) p.status = 'overdue';
+        } catch (e) {
+          console.warn('Falha ao marcar pagamentos em atraso (producer):', e);
+        }
+      }
+
+      return { data: list };
     } catch (error) {
       console.error('Erro de conexão ao buscar pagamentos do produtor:', error);
       return { error: 'Erro de conexão' };
