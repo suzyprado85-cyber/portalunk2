@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import Icon from '../../components/AppIcon';
