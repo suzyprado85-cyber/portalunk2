@@ -336,18 +336,47 @@ export const storageService = {
   // Upload file to storage
   async uploadFile(bucket, path, file) {
     try {
-      const { data, error } = await supabase?.storage?.from(bucket)?.upload(path, file, {
+      const attemptUpload = async () => {
+        const { data, error } = await supabase?.storage?.from(bucket)?.upload(path, file, {
           cacheControl: '3600',
           upsert: true
         });
-      
+        return { data, error };
+      };
+
+      // First attempt
+      let { data, error } = await attemptUpload();
+
+      // If bucket not found, try to create it (best-effort). Creating a bucket may require elevated permissions; if it fails, return informative error.
+      if (error && typeof error.message === 'string' && /bucket not found/i.test(error.message)) {
+        try {
+          // Best-effort create bucket. This will likely fail on client-side if using anon key, but we try to give an automated fix when possible.
+          const { data: created, error: createErr } = await supabase?.storage?.createBucket(bucket, { public: true });
+          if (createErr) {
+            // Surface a clear error to the caller
+            return handleError(createErr, `Bucket "${bucket}" não encontrado e criação automática falhou. Crie o bucket manualmente no painel do Supabase.`);
+          }
+
+          // Retry upload after creating bucket
+          const retry = await attemptUpload();
+          data = retry.data;
+          error = retry.error;
+        } catch (createException) {
+          return handleError(createException, `Erro ao tentar criar o bucket "${bucket}"`);
+        }
+      }
+
       if (error) return handleError(error, 'Erro ao fazer upload do arquivo');
-      
+
       // Get public URL
       const { data: { publicUrl } } = supabase?.storage?.from(bucket)?.getPublicUrl(data?.path);
-      
+
       return { data: { ...data, publicUrl } };
     } catch (error) {
+      // If the error contains a bucket not found message, return a friendlier instruction
+      if (error && error.message && /bucket not found/i.test(error.message)) {
+        return handleError(error, `Bucket "${bucket}" não encontrado. Por favor crie o bucket no painel do Supabase ou verifique as permissões.`);
+      }
       return handleError(error, 'Erro de conexão ao fazer upload');
     }
   },
