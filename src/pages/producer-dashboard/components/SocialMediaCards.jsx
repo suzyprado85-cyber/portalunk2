@@ -8,7 +8,7 @@ const SocialMediaCards = ({ dj }) => {
       id: 'instagram',
       name: 'Instagram',
       icon: 'Instagram',
-      url: dj?.instagram,
+      url: normalizeSocialUrl('instagram', dj?.instagram),
       color: 'bg-gradient-to-r from-pink-500 to-purple-600',
       hoverColor: 'hover:from-pink-600 hover:to-purple-700'
     },
