@@ -70,10 +70,13 @@ const DJProfile = () => {
   }, [contracts, djEvents]);
 
   const djPayments = useMemo(() => {
-    return (payments || []).filter(payment => 
+    return (payments || []).filter(payment =>
       djEvents.find(event => event.id === payment?.event_id)
     );
   }, [payments, djEvents]);
+
+  const pendingPayments = useMemo(() => (djPayments || []).filter(p => p.status !== 'paid'), [djPayments]);
+  const pendingAmount = useMemo(() => pendingPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0), [pendingPayments]);
 
   // Obter imagem de fundo - prioritizar background_image_url
   const currentBackgroundImage = dj?.background_image_url || 
@@ -410,7 +413,7 @@ const DJProfile = () => {
           {activeTab === 'financeiro' && (
             <div className="space-y-8">
               {/* Resumo Financeiro */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
                   <h4 className="text-lg font-semibold text-white mb-4">Total de Receita</h4>
                   <p className="text-3xl font-bold text-green-400">
@@ -423,6 +426,48 @@ const DJProfile = () => {
                     {djPayments.filter(p => p.status === 'paid').length}
                   </p>
                 </div>
+                <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
+                  <h4 className="text-lg font-semibold text-white mb-4">Pagamentos Pendentes</h4>
+                  <p className="text-3xl font-bold text-yellow-400">
+                    {pendingPayments.length}
+                  </p>
+                </div>
+                <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
+                  <h4 className="text-lg font-semibold text-white mb-4">Valor Pendente</h4>
+                  <p className="text-3xl font-bold text-amber-400">
+                    {formatCurrency(pendingAmount)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Lista de Pagamentos Pendentes */}
+              <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
+                <h4 className="text-lg font-semibold text-white mb-4">Pagamentos Pendentes</h4>
+                {pendingPayments.length === 0 ? (
+                  <p className="text-gray-400">Nenhum pagamento pendente</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingPayments.map((p) => (
+                      <div key={p.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                        <div className="flex-1">
+                          <div className="text-white font-medium">{p?.event?.title || 'Evento'}</div>
+                          <div className="text-sm text-gray-400">{p?.event?.event_date ? formatDate(p.event.event_date) : ''}</div>
+                        </div>
+                        <div className="flex items-center gap-3 mt-2 sm:mt-0">
+                          <span className="text-amber-400 font-semibold">{formatCurrency(parseFloat(p.amount) || 0)}</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${p.status === 'processing' ? 'bg-blue-600/20 text-blue-400 border-blue-500/30' : 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30'}`}>
+                            {p.status === 'processing' ? 'Processando' : 'Pendente'}
+                          </span>
+                          {p.payment_proof_url && (
+                            <a href={p.payment_proof_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">
+                              Comprovante
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Lista de Pagamentos */}
