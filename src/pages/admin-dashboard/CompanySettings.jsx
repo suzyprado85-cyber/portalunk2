@@ -336,6 +336,12 @@ const CompanySettings = () => {
             {activeTab === 'banking' && renderBankingTab()}
             {activeTab === 'contracts' && renderContractsTab()}
             {activeTab === 'payments' && renderPaymentsTab()}
+
+            {saveSuccess && (
+              <div className="mt-4 p-3 rounded-md bg-green-600/10 border border-green-600/20 text-green-700 text-sm">
+                Configurações salvas com sucesso
+              </div>
+            )}
           </div>
 
           {/* Save Button */}
