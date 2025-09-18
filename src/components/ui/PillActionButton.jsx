@@ -40,7 +40,16 @@ export default function PillActionButton({ color='purple', iconName='Share2', ch
         bg-gradient-to-br ${s.gradient} border border-white/10 shadow-inner ring-1 ${s.ring}
         hover:border-white/20 hover:ring-white/40 transition backdrop-blur-xs disabled:opacity-60 disabled:cursor-not-allowed ${className}`}
     >
-      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br ${s.iconBg} shadow-md`}>
+      <span
+        className={`inline-flex items-center justify-center w-7 h-7 rounded-full shadow-md`}
+        style={{
+          backgroundImage: 'url(https://cdn.builder.io/api/v1/image/assets%2F0f853d9f9b554108a2a6db6f58cbee9d%2Fa599072001dd46028b941b5e798e6539)',
+          backgroundColor: 'rgba(103, 16, 229, 1)',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          backgroundSize: 'cover'
+        }}
+      >
         <Icon name={iconName} size={16} className="text-white" />
       </span>
       <span className="text-sm font-medium">{children}</span>
