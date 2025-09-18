@@ -182,7 +182,7 @@ const DJMediaGallery = ({ djId, djName, dj = null, isAdmin = false, onMediaUpdat
   const categoriesWithCounts = categories.map(cat => ({
     ...cat,
     count: mediaFiles[cat.id]?.length || 0
-  }));
+  })).filter(cat => (isAdmin ? true : cat.count > 0));
 
   if (loading) {
     return (
