@@ -197,7 +197,7 @@ export const producerService = {
 
       // Update profile with avatar URL
       const { error: updateError } = await supabase?.from('profiles')?.update({
-        profile_image_url: publicUrl
+        avatar_url: publicUrl
       })?.eq('id', producerId);
 
       if (updateError) {
