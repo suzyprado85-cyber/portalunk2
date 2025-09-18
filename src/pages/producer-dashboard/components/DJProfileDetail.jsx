@@ -14,6 +14,7 @@ import { eventService, contractService, paymentService, storageService } from '.
 
 const DJProfileDetail = ({ dj, onBack }) => {
   const navigate = useNavigate();
+  const { userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [dateFilter, setDateFilter] = useState({
     startDate: '',
