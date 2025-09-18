@@ -76,7 +76,7 @@ const EventModal = ({
 
   const producerOptions = producers?.map(producer => ({
     value: producer?.id,
-    label: producer?.name
+    label: producer?.name || producer?.company_name || producer?.email
   }));
 
   const djOptions = djs?.map(dj => ({
