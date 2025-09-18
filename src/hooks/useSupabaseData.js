@@ -15,9 +15,10 @@ export const useSupabaseData = (service, method, params = [], dependencies = [])
       const result = await service?.[method](...params);
       
       if (result?.error) {
-        console.error(`❌ useSupabaseData: Erro em ${method}:`, result.error);
-        setError(result?.error);
-      } else {
+      const errMsg = typeof result.error === 'string' ? result.error : (result.error?.message || JSON.stringify(result.error));
+      console.error(`❌ useSupabaseData: Erro em ${method}:`, result.error);
+      setError(errMsg);
+    } else {
         if (import.meta.env?.DEV) console.log(`✅ useSupabaseData: Dados recebidos para ${method}:`, result?.data?.length || 0, 'itens');
         setData(result?.data);
       }
