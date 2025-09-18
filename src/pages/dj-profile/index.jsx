@@ -3,6 +3,8 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import SocialPill from '../../components/ui/SocialPill';
+import { normalizeSocialUrl } from '../../utils/social';
 import { useSupabaseData } from '../../hooks/useSupabaseData';
 import { djService, eventService, contractService } from '../../services/supabaseService';
 import { mediaService } from '../../services/mediaService';
