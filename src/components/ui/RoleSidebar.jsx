@@ -153,11 +153,16 @@ const RoleSidebar = ({ userRole = 'admin', isCollapsed = false, onToggleCollapse
                   onClick={() => handleNavigation(item?.path)}
                   className={`relative w-full flex items-center space-x-3 px-3 py-2 rounded-md text-left transition-all duration-150 ease-smooth transform hover:scale-98 ${
                     isActive(item?.path)
-                      ? 'bg-gradient-to-r from-purple-700 to-indigo-600 text-white shadow-[0_8px_24px_rgba(99,102,241,0.12)]'
+                      ? 'relative overflow-visible bg-gradient-to-r from-[#160423] via-[#2b0b3c] to-[#3b1b6b] text-white shadow-[0_0_30px_rgba(124,58,237,0.28)] border border-purple-700/30'
                       : 'text-foreground hover:bg-muted hover:text-foreground'
                   }`}
                   title={isCollapsed ? item?.label : undefined}
                 >
+
+                  {/* Colored glow behind active button */}
+                  {isActive(item?.path) && (
+                    <span className="pointer-events-none absolute -inset-px rounded-md blur-xl opacity-70 bg-gradient-to-r from-purple-600/40 via-indigo-500/30 to-pink-600/20" />
+                  )}
                   <Icon
                     name={item?.icon}
                     size={20}
