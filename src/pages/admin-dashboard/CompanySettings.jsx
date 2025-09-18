@@ -214,20 +214,23 @@ const CompanySettings = () => {
           value={formData.bank_agency}
           onChange={(e) => handleInputChange('bank_agency', e.target.value)}
           placeholder="1234"
+          disabled={!editing}
         />
-        
+
         <Input
           label="Conta"
           value={formData.bank_account}
           onChange={(e) => handleInputChange('bank_account', e.target.value)}
           placeholder="12345-6"
+          disabled={!editing}
         />
-        
+
         <Input
           label="Chave PIX"
           value={formData.pix_key}
           onChange={(e) => handleInputChange('pix_key', e.target.value)}
           placeholder="contato@unkassessoria.com"
+          disabled={!editing}
         />
       </div>
       
