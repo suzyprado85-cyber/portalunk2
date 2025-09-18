@@ -43,7 +43,6 @@ const EventModal = ({
         venue: event?.venue || '',
         city: event?.city || '',
         description: event?.description || '',
-        eventType: event?.eventType || '',
         producerId: event?.producerId || '',
         djIds: event?.djIds || [],
         status: event?.status || 'pending',
