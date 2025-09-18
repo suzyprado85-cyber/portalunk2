@@ -133,10 +133,24 @@ const ProducerManagement = () => {
         avatar_url: editData?.avatar_url || editData?.profile_image_url || ''
       });
       setSelectedAvatar(null);
+      setSelectedAvatarPreview('');
       setNewPassword('');
       setShowPassword(false);
     }
   }, [editData]);
+
+  // Generate preview URL when a file is selected
+  useEffect(() => {
+    if (!selectedAvatar) {
+      setSelectedAvatarPreview('');
+      return;
+    }
+    const url = URL.createObjectURL(selectedAvatar);
+    setSelectedAvatarPreview(url);
+    return () => {
+      try { URL.revokeObjectURL(url); } catch {}
+    };
+  }, [selectedAvatar]);
 
   const handleAvatarSelect = (e) => {
     const file = e?.target?.files?.[0];
@@ -351,8 +365,10 @@ const ProducerManagement = () => {
               <div className="flex flex-col items-center space-y-4 p-4 border border-border/60 rounded-lg mb-4">
                 <div className="flex items-center space-x-4">
                   <div className="w-20 h-20 rounded-lg overflow-hidden border">
-                    {formData?.avatar_url || editData?.profile_image_url ? (
-                      <img src={formData?.avatar_url || editData?.profile_image_url} alt={formData?.name || 'Produtor'} className="w-full h-full object-cover" />
+                    {selectedAvatarPreview ? (
+                      <img src={selectedAvatarPreview} alt={formData?.name || 'Produtor'} className="w-full h-full object-cover object-center" />
+                    ) : formData?.avatar_url || editData?.profile_image_url ? (
+                      <img src={formData?.avatar_url || editData?.profile_image_url} alt={formData?.name || 'Produtor'} className="w-full h-full object-cover object-center" />
                     ) : (
                       <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-xl font-semibold">
                         {(formData?.name || 'P').charAt(0)}
