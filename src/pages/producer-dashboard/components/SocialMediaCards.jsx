@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
+import { normalizeSocialUrl } from '../../../utils/social';
 
 const SocialMediaCards = ({ dj }) => {
   const socialLinks = [
