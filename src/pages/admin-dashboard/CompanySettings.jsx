@@ -25,7 +25,8 @@ const CompanySettings = () => {
     pix_key: '',
     contract_template: '',
     payment_instructions: '',
-    avatar_url: ''
+    avatar_url: '',
+    avatar_url_preview: ''
   });
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('company');
@@ -47,25 +48,18 @@ const CompanySettings = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      // If avatar file present in state (temporary), upload it
       if (formData._avatarFile) {
         const file = formData._avatarFile;
         const fileExt = file.name.split('.').pop();
         const fileName = `company_avatar_${Date.now()}.${fileExt}`;
         const path = `company/${fileName}`;
-        // use storageService to upload
-        const { data, error } = await storageService.uploadFile('avatars', path, file);
+        const { data, error } = await storageService.uploadFile('dj-media', path, file);
         if (error) throw new Error(error);
-        formData.avatar_url = data?.publicUrl || data?.publicUrl;
-        // persist to localStorage for TopBar
-        try { localStorage.setItem('company_avatar_url', formData.avatar_url); } catch (e) {}
-        delete formData._avatarFile;
+        const publicUrl = data?.publicUrl;
+        setFormData(prev => ({ ...prev, avatar_url: publicUrl, avatar_url_preview: '' }));
+        try { localStorage.setItem('company_avatar_url', publicUrl); } catch (e) {}
       }
 
-      // Aqui você salvaria no Supabase (opcional)
-      // await supabase.from('company_settings').upsert(formData);
-
-      // Por enquanto, vamos simular o salvamento
       await new Promise(resolve => setTimeout(resolve, 500));
 
       toast?.success('Configurações salvas com sucesso!');
@@ -84,8 +78,8 @@ const CompanySettings = () => {
           <label className="block text-sm font-medium text-foreground mb-2">Avatar da Empresa</label>
           <div className="flex items-center gap-4">
             <div className="w-20 h-20 rounded-full overflow-hidden border border-border bg-muted flex items-center justify-center">
-              {formData.avatar_url ? (
-                <img src={formData.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+              {(formData.avatar_url_preview || formData.avatar_url) ? (
+                <img src={formData.avatar_url_preview || formData.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-muted-foreground">UNK</span>
               )}
@@ -94,7 +88,12 @@ const CompanySettings = () => {
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleInputChange('_avatarFile', e?.target?.files?.[0])}
+                onChange={(e) => {
+                  const file = e?.target?.files?.[0];
+                  if (!file) return;
+                  const previewUrl = URL.createObjectURL(file);
+                  setFormData(prev => ({ ...prev, _avatarFile: file, avatar_url_preview: previewUrl }));
+                }}
                 className="text-sm text-muted-foreground"
               />
               <p className="text-xs text-muted-foreground">Use uma imagem quadrada para melhores resultados</p>
@@ -273,6 +272,14 @@ const CompanySettings = () => {
       </div>
     </div>
   );
+
+  useEffect(() => {
+    return () => {
+      if (formData.avatar_url_preview) {
+        try { URL.revokeObjectURL(formData.avatar_url_preview); } catch {}
+      }
+    };
+  }, [formData.avatar_url_preview]);
 
   return (
     <AdminBackground>
