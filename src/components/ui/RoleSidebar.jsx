@@ -173,7 +173,7 @@ const RoleSidebar = ({ userRole = 'admin', isCollapsed = false, onToggleCollapse
                   </span>
 
                   {isActive(item?.path) && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-purple-400 ring-2 ring-white/10 shadow-sm" />
+                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ring-2 ring-white/10 shadow-sm ${item?.id === 'producers' ? 'bg-purple-400 opacity-0' : 'bg-purple-400'}`} />
                   )}
                 </button>
               </li>
