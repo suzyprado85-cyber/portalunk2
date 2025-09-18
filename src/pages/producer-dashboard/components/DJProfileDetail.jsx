@@ -170,11 +170,17 @@ const DJProfileDetail = ({ dj, onBack }) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-6 py-4 font-medium text-sm transition-all relative ${
+                className={`flex items-center space-x-2 px-6 py-4 text-sm transition-all relative ${
                   activeTab === tab.id
-                    ? 'text-white bg-gradient-to-r from-purple-600 to-blue-600'
+                    ? 'text-white font-semibold'
                     : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
                 } ${index === 0 ? 'rounded-l-lg' : ''} ${index === tabs.length - 1 ? 'rounded-r-lg' : ''}`}
+                style={activeTab === tab.id ? {
+                  backgroundImage: 'url(https://cdn.builder.io/api/v1/image/assets%2F0f853d9f9b554108a2a6db6f58cbee9d%2F7e3970ebf9a84e61baefb29192632951)',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'center',
+                  backgroundSize: 'cover'
+                } : undefined}
               >
                 <Icon name={tab.icon} size={18} />
                 <span>{tab.label}</span>
