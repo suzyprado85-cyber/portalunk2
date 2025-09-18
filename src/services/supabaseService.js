@@ -214,9 +214,10 @@ export const eventService = {
         const createdEvent = data;
         const isConfirmed = createdEvent?.status === 'confirmed' || eventData?.status === 'confirmed';
         const cacheValue = createdEvent?.cache_value ?? eventData?.cache_value ?? null;
-        const cacheIsento = createdEvent?.cache_isento ?? eventData?.cache_isento ?? false;
+        // In DB schema cache_value is NOT NULL; a value of 0.00 means isento (no payment expected)
+        const cacheIsExempt = cacheValue != null ? (parseFloat(cacheValue) === 0) : false;
 
-        if (isConfirmed && cacheValue != null && !cacheIsento && parseFloat(cacheValue) > 0) {
+        if (isConfirmed && cacheValue != null && !cacheIsExempt && parseFloat(cacheValue) > 0) {
           const commissionPct = (createdEvent?.commission_percentage != null) ? parseFloat(createdEvent.commission_percentage) : (eventData?.commission_percentage != null ? parseFloat(eventData.commission_percentage) : 10);
           const commissionAmount = (parseFloat(cacheValue) * (commissionPct / 100));
 
