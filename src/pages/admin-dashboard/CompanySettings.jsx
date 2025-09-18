@@ -293,7 +293,8 @@ const CompanySettings = () => {
           onChange={(e) => handleInputChange('payment_instructions', e.target.value)}
           placeholder="Digite as instruções padrão para pagamentos..."
           rows={8}
-          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          disabled={!editing}
+          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
         />
       </div>
       
