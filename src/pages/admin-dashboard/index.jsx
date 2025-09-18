@@ -8,7 +8,6 @@ import ActivityFeed from './components/ActivityFeed';
 import QuickActions from './components/QuickActions';
 import SummaryTable from './components/SummaryTable';
 import Icon from '../../components/AppIcon';
-import SupabaseDebug from '../../components/SupabaseDebug';
 import AdminBackground from '../../components/AdminBackground';
 import { useAuth } from '../../contexts/AuthContext';
 import { analyticsService, eventService, contractService, djService } from '../../services/supabaseService';
@@ -138,14 +137,24 @@ const AdminDashboard = () => {
   ];
 
   // Transform events data for table
-  const eventsData = realtimeEvents?.slice(0, 5)?.map(event => ({
-    id: event?.id,
-    nome: event?.title,
-    data: event?.event_date,
-    local: event?.location,
-    djs: 1, // Single DJ per event based on schema
-    status: event?.status
-  })) || [];
+  // Calculate upcoming events: sort ascending and pick 4 events starting from the next upcoming one
+  const eventsData = (() => {
+    if (!realtimeEvents || realtimeEvents.length === 0) return [];
+    const sorted = [...realtimeEvents].sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
+    const now = new Date();
+    // Find first index of an event that is in the future OR confirmed
+    let startIdx = sorted.findIndex(e => new Date(e.event_date) >= now || e.status === 'confirmed');
+    if (startIdx === -1) startIdx = 0; // fallback to beginning
+    const slice = sorted.slice(startIdx, startIdx + 4);
+    return slice.map(event => ({
+      id: event?.id,
+      nome: event?.title,
+      data: event?.event_date,
+      local: event?.location,
+      djs: 1,
+      status: event?.status
+    }));
+  })();
 
   const eventColumns = [
     { key: 'nome', label: 'Evento', sortable: true },
@@ -327,24 +336,10 @@ const AdminDashboard = () => {
             {/* Left Column - Tables */}
             <div className="xl:col-span-2 space-y-6">
               <SummaryTable
-                title="Contratos Recentes"
-                data={contractsData}
-                columns={contractColumns}
-                type="contracts"
-              />
-              
-              <SummaryTable
                 title="Próximos Eventos"
                 data={eventsData}
                 columns={eventColumns}
                 type="events"
-              />
-              
-              <SummaryTable
-                title="Pagamentos Recentes"
-                data={paymentsData}
-                columns={paymentColumns}
-                type="payments"
               />
             </div>
 
@@ -356,10 +351,6 @@ const AdminDashboard = () => {
         </div>
         </main>
         
-        {/* Debug Component */}
-        {(import.meta.env?.DEV || import.meta.env?.VITE_DEBUG === 'true') && (
-          <SupabaseDebug />
-        )}
       </div>
     </AdminBackground>
   );
