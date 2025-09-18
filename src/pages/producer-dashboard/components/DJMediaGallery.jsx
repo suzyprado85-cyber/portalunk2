@@ -4,6 +4,8 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { mediaService } from '../../../services/mediaService';
 import { djService } from '../../../services/djService';
+import { storageService } from '../../../services/supabaseService';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const DJMediaGallery = ({ djId }) => {
   const [mediaFiles, setMediaFiles] = useState({
