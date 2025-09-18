@@ -159,7 +159,7 @@ export const usePendingPayments = (filters = {}) => {
     };
   }, [filteredPayments, overduePayments]);
 
-  // Upload payment proof
+  // Upload payment proof (producer can upload comprovante and mark as paid)
   const uploadPaymentProof = useCallback(async (paymentId, file, description = '') => {
     if (!paymentId || !file) {
       toast.error('ID do pagamento e arquivo são obrigatórios');
@@ -175,8 +175,8 @@ export const usePendingPayments = (filters = {}) => {
 
       // Upload to Supabase Storage
       const { data: uploadData, error: uploadError } = await storageService.uploadFile(
-        'payment-proofs', 
-        filePath, 
+        'payment-proofs',
+        filePath,
         file
       );
 
@@ -184,18 +184,22 @@ export const usePendingPayments = (filters = {}) => {
         throw new Error(uploadError);
       }
 
-      // Update payment with proof URL
-      const result = await paymentService.updateWithProof(paymentId, uploadData.publicUrl);
-      
-      if (result?.error) {
-        throw new Error(result.error);
+      // Confirm payment and attach proof (producer action)
+      const confirmResult = await paymentService.confirmPayment(paymentId, {
+        payment_method: 'transferencia',
+        paid_at: new Date().toISOString(),
+        proofUrl: uploadData.publicUrl
+      });
+
+      if (confirmResult?.error) {
+        throw new Error(confirmResult.error);
       }
 
       // Refresh payments data
       await refetchPayments();
-      
-      toast.success('Comprovante enviado com sucesso!');
-      return { data: result.data };
+
+      toast.success('Comprovante enviado e pagamento marcado como pago!');
+      return { data: confirmResult.data };
     } catch (error) {
       console.error('Erro ao enviar comprovante:', error);
       toast.error('Erro ao enviar comprovante: ' + error.message);
