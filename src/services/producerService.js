@@ -182,8 +182,8 @@ export const producerService = {
       const fileName = `${producerId}-${Date.now()}.${fileExt}`;
       const filePath = `producers/${fileName}`;
 
-      // Use storageService to upload (handles bucket not found and public URL retrieval)
-      const uploadRes = await storageService.uploadFile('avatars', filePath, file);
+      // Use storageService to upload to 'producer-avatar' bucket
+      const uploadRes = await storageService.uploadFile('producer-avatar', filePath, file);
       if (uploadRes?.error) {
         return handleError(uploadRes.error, 'Erro ao fazer upload da imagem');
       }
