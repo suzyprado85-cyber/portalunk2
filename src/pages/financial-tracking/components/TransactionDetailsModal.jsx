@@ -129,68 +129,6 @@ const TransactionDetailsModal = ({ isOpen, onClose, transaction }) => {
             </div>
           </div>
 
-          {/* Financial Distribution */}
-          <div className="bg-muted/30 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-foreground mb-3 flex items-center">
-              <Icon name="DollarSign" size={20} className="mr-2" />
-              Distribuição Financeira
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-card rounded-md border border-border">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
-                    <Icon name="Shield" size={16} color="white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Administração</p>
-                    <p className="text-xs text-muted-foreground">Taxa administrativa</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-semibold text-foreground">{formatCurrency(transaction?.distribution?.admin)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {((transaction?.distribution?.admin / transaction?.totalAmount) * 100)?.toFixed(1)}%
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-card rounded-md border border-border">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                    <Icon name="Headphones" size={16} color="white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">DJ</p>
-                    <p className="text-xs text-muted-foreground">Pagamento do artista</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-semibold text-foreground">{formatCurrency(transaction?.distribution?.dj)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {((transaction?.distribution?.dj / transaction?.totalAmount) * 100)?.toFixed(1)}%
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-card rounded-md border border-border">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
-                    <Icon name="User" size={16} color="white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Produtor</p>
-                    <p className="text-xs text-muted-foreground">Comissão do produtor</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-semibold text-foreground">{formatCurrency(transaction?.distribution?.producer)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {((transaction?.distribution?.producer / transaction?.totalAmount) * 100)?.toFixed(1)}%
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Payment Information */}
           <div className="bg-muted/30 rounded-lg p-4">
@@ -203,6 +141,14 @@ const TransactionDetailsModal = ({ isOpen, onClose, transaction }) => {
                 <p className="text-sm text-muted-foreground">Método de Pagamento</p>
                 <p className="text-foreground font-medium">{transaction?.paymentMethod || 'Transferência Bancária'}</p>
               </div>
+              {transaction?.paymentProofUrl && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Comprovante</p>
+                  <a href={transaction?.paymentProofUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-primary hover:underline font-medium">
+                    <Icon name="ExternalLink" size={16} className="mr-1" /> Visualizar Comprovante
+                  </a>
+                </div>
+              )}
               <div>
                 <p className="text-sm text-muted-foreground">Data de Vencimento</p>
                 <p className="text-foreground font-medium">{formatDate(transaction?.dueDate)}</p>
