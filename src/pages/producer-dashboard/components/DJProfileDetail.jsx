@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import SocialPill from '../../../components/ui/SocialPill';
+import { normalizeSocialUrl } from '../../../utils/social';
 import DJMediaGallery from './DJMediaGallery';
 import SocialMediaCards from './SocialMediaCards';
 import PendingPaymentsManager from './PendingPaymentsManager';
