@@ -312,6 +312,24 @@ export const eventService = {
     } catch (error) {
       return handleError(error, 'Erro de conexão ao atualizar evento');
     }
+  },
+
+  // Delete event permanently
+  async delete(id) {
+    try {
+      // Delete payments associated with the event first (if any)
+      try {
+        await supabase?.from('payments')?.delete()?.eq('event_id', id);
+      } catch (e) {
+        console.warn('Falha ao deletar pagamentos associados ao evento:', e);
+      }
+
+      const { data, error } = await supabase?.from('events')?.delete()?.eq('id', id)?.select();
+      if (error) return handleError(error, 'Erro ao deletar evento');
+      return { data };
+    } catch (error) {
+      return handleError(error, 'Erro de conexão ao deletar evento');
+    }
   }
 };
 
