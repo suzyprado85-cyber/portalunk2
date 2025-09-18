@@ -198,12 +198,12 @@ const DJProfile = () => {
                   )}
                   {dj.soundcloud && (
                     <a href={getSocialLink('soundcloud', dj.soundcloud)} target="_blank" rel="noopener noreferrer" className="text-gray-200 hover:text-white text-sm flex items-center space-x-1">
-                      <Icon name="Music" size={16} />
+                      <Icon name="SoundCloud" size={16} />
                     </a>
                   )}
                   {dj.youtube && (
                     <a href={getSocialLink('youtube', dj.youtube)} target="_blank" rel="noopener noreferrer" className="text-gray-200 hover:text-white text-sm flex items-center space-x-1">
-                      <Icon name="Play" size={16} />
+                      <Icon name="YouTube" size={16} />
                     </a>
                   )}
                 </div>
