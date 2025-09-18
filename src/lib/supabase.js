@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const rawUrl = import.meta.env?.VITE_SUPABASE_URL;
-const rawKey = import.meta.env?.VITE_SUPABASE_ANON_KEY;
+const rawKey = import.meta.env?.VITE_SUPABASE_ANON_KEY ?? import.meta.env?.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
 const sanitize = (v) => (typeof v === 'string' ? v : '')
   .trim()
