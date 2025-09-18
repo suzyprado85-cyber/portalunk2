@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RoleSidebar from '../../components/ui/RoleSidebar';
 import TopBar from '../../components/ui/TopBar';
-import BreadcrumbTrail from '../../components/ui/BreadcrumbTrail';
 import MetricsCard from './components/MetricsCard';
 import ActivityFeed from './components/ActivityFeed';
 import QuickActions from './components/QuickActions';
@@ -270,8 +269,7 @@ const AdminDashboard = () => {
         <div className="p-6">
           {/* Header Section */}
           <div className="mb-6">
-            <BreadcrumbTrail />
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Dashboard Administrativo</h1>
                 <p className="text-muted-foreground mt-1">
