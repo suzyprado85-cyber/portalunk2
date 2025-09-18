@@ -19,7 +19,7 @@ export const usePendingPayments = (filters = {}) => {
 
   // Filter pending payments based on provided filters
   const filteredPayments = useMemo(() => {
-    let filtered = (payments || []).filter(payment => payment?.status === 'pending');
+    let filtered = (payments || []).filter(payment => payment?.status === 'pending' || payment?.status === 'processing');
 
     // Apply DJ filter
     if (filters?.djId) {
