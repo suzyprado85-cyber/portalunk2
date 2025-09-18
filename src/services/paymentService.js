@@ -104,6 +104,7 @@ export const paymentService = {
         .from('payments')
         .update({
           payment_proof_url: proofUrl,
+          status: 'processing',
           updated_at: new Date().toISOString()
         })
         .eq('id', paymentId)
