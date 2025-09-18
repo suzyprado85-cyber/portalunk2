@@ -21,6 +21,10 @@ const DJMediaGallery = ({ djId }) => {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('logo');
   const [djName, setDjName] = useState('');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [sharePassword, setSharePassword] = useState('');
+  const [shareGenerating, setShareGenerating] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
 
   const categories = [
     { id: 'logo', name: 'Logo', icon: 'Image' },
