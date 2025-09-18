@@ -17,6 +17,7 @@ const DJProfile = lazy(() => import('./pages/dj-profile'));
 const Login = lazy(() => import('./pages/auth/Login'));
 const Signup = lazy(() => import('./pages/auth/Signup'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const SharedMedia = lazy(() => import('./pages/share/SharedMedia'));
 
 const Routes = () => {
   return (
