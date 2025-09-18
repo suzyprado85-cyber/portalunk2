@@ -6,7 +6,7 @@ import Button from '../../components/ui/Button';
 import AdminBackground from '../../components/AdminBackground';
 import Input from '../../components/ui/Input';
 import { useSupabaseData } from '../../hooks/useSupabaseData';
-import { storageService, producerService } from '../../services/supabaseService';
+import { storageService } from '../../services/supabaseService';
 import { supabase } from '../../lib/supabase';
 
 const CompanySettings = () => {
