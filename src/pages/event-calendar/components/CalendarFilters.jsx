@@ -12,15 +12,6 @@ const CalendarFilters = ({
   producers,
   djs 
 }) => {
-  const eventTypeOptions = [
-    { value: '', label: 'Todos os Tipos' },
-    { value: 'show', label: 'Show' },
-    { value: 'festival', label: 'Festival' },
-    { value: 'private', label: 'Evento Privado' },
-    { value: 'corporate', label: 'Evento Corporativo' },
-    { value: 'wedding', label: 'Casamento' }
-  ];
-
   const statusOptions = [
     { value: '', label: 'Todos os Status' },
     { value: 'confirmed', label: 'Confirmado' },
