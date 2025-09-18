@@ -85,8 +85,8 @@ export const mediaService = {
   // Upload external link
   async uploadExternalLink(uploadData) {
     console.log('🔗 Fazendo upload de link externo para DJ:', uploadData.djId);
-    
-    const { djId, externalLink, category, title, fileType } = uploadData;
+
+    const { djId, djName, externalLink, category, title, fileType } = uploadData;
 
     try {
       // Determinar o tipo de arquivo baseado na categoria e URL
@@ -95,7 +95,46 @@ export const mediaService = {
         detectedFileType = 'video/external';
       }
 
-      // Salvar metadados no banco (sem arquivo físico, apenas o link)
+      // Se for backdrop e o link for direto para arquivo (CORS permitido), tentar baixar e salvar no storage
+      if (category === 'backdrop') {
+        try {
+          const res = await fetch(externalLink, { method: 'GET' });
+          const contentType = res.headers.get('content-type') || '';
+          const isBinary = contentType.startsWith('video/') || contentType.startsWith('image/') || contentType === 'application/octet-stream';
+          if (res.ok && isBinary) {
+            const blob = await res.blob();
+            const extFromType = contentType.includes('/') ? contentType.split('/')[1].split(';')[0] : 'bin';
+            const djFolder = (djName || 'dj').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            const fileName = `${djFolder}/backdrop/${Date.now()}-${Math.random().toString(36).substring(2)}.${extFromType}`;
+            const { data: uploadDataRes, error: uploadErr } = await supabase.storage.from('dj-media').upload(fileName, blob);
+            if (!uploadErr) {
+              const { data: urlData } = supabase.storage.from('dj-media').getPublicUrl(fileName);
+              const mediaDataStored = {
+                dj_id: djId,
+                file_name: title || `backdrop-${new Date().toISOString()}`,
+                file_type: contentType.startsWith('video/') ? 'video' : (contentType.startsWith('image/') ? 'image' : 'other'),
+                file_url: urlData.publicUrl,
+                file_size: blob.size,
+                category: 'backdrop',
+                description: null
+              };
+              const { data: mediaRecordStored, error: mediaErrorStored } = await supabase
+                .from('dj_media')
+                .insert(mediaDataStored)
+                .select()
+                .single();
+              if (!mediaErrorStored) {
+                toast.success('Backdrop salvo no storage com sucesso!');
+                return { data: mediaRecordStored };
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Não foi possível baixar o link externo para o backdrop. Salvando apenas o link.', e);
+        }
+      }
+
+      // Fallback: salvar metadados no banco (sem arquivo físico, apenas o link)
       const mediaData = {
         dj_id: djId,
         file_name: title,
