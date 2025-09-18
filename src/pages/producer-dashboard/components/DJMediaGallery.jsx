@@ -318,6 +318,58 @@ const DJMediaGallery = ({ djId }) => {
           </p>
         </div>
       )}
+
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border rounded-lg w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h4 className="text-lg font-semibold text-foreground">Compartilhar mídias</h4>
+              <Button variant="ghost" size="sm" iconName="X" onClick={() => { setShowShareModal(false); setShareUrl(''); }} />
+            </div>
+            <div className="p-4 space-y-4">
+              <p className="text-sm text-muted-foreground">Crie um link protegido por senha para compartilhar as mídias do DJ.</p>
+              <form onSubmit={handleGenerateShare} className="space-y-3">
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">Senha do produtor</label>
+                  <input
+                    type="password"
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                    value={sharePassword}
+                    onChange={(e) => setSharePassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full" loading={shareGenerating} iconName="Link" iconPosition="left">
+                  Gerar link
+                </Button>
+              </form>
+              {shareUrl && (
+                <div className="bg-muted rounded-md p-3 border border-border">
+                  <p className="text-xs text-muted-foreground mb-2">Link gerado:</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={shareUrl}
+                      className="flex-1 px-2 py-2 text-sm bg-background border border-border rounded-md"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(shareUrl);
+                        toast.success('Link copiado');
+                      }}
+                      iconName="Copy"
+                      iconPosition="left"
+                    >
+                      Copiar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
