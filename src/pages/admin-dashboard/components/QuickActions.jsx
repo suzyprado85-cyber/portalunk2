@@ -10,45 +10,45 @@ const QuickActions = () => {
   const actions = [
     {
       id: 'dj-management',
-      label: 'Gerenciar DJs',
-      description: 'Adicionar, editar e visualizar perfis de DJs',
-      icon: 'Users',
+      label: 'Novo DJ',
+      description: 'Cadastrar novo DJ',
+      icon: 'UserPlus',
       path: '/dj-management',
-      variant: 'outline'
+      color: 'purple'
     },
     {
       id: 'create-event',
       label: 'Criar Evento',
-      description: 'Agendar novo evento no calendário',
+      description: 'Agendar novo evento',
       icon: 'Calendar',
       path: '/event-calendar',
-      variant: 'outline'
-    },
-    {
-      id: 'financial-report',
-      label: 'Relatório Financeiro',
-      description: 'Visualizar transações e pagamentos',
-      icon: 'DollarSign',
-      path: '/financial-tracking',
-      variant: 'outline'
+      color: 'green'
     },
     {
       id: 'contract-management',
-      label: 'Contratos',
-      description: 'Gerenciar contratos e assinaturas',
+      label: 'Novo Contrato',
+      description: 'Criar contrato',
       icon: 'FileText',
       path: '/contract-management',
-      variant: 'outline'
+      color: 'blue'
     },
     {
-      id: 'add-producer',
-      label: 'Adicionar Produtor',
-      description: 'Cadastrar novo produtor no sistema',
-      icon: 'UserPlus',
-      variant: 'outline',
-      action: 'modal'
-    }
+      id: 'financial-report',
+      label: 'Ver Relatórios',
+      description: 'Análises financeiras',
+      icon: 'BarChart2',
+      path: '/financial-tracking',
+      color: 'amber'
+    },
   ];
+
+  const colorClasses = {
+    purple: 'bg-purple-600/10 border-purple-500/20 hover:bg-purple-600/15',
+    green: 'bg-green-600/10 border-green-500/20 hover:bg-green-600/15',
+    blue: 'bg-blue-600/10 border-blue-500/20 hover:bg-blue-600/15',
+    amber: 'bg-amber-500/10 border-amber-400/20 hover:bg-amber-500/15',
+    rose: 'bg-rose-600/10 border-rose-500/20 hover:bg-rose-600/15'
+  };
 
   const handleActionClick = (action) => {
     if (action.action === 'modal') {
