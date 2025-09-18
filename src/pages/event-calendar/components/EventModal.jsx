@@ -26,6 +26,7 @@ const EventModal = ({
     djIds: [],
     status: 'pending',
     cache: '',
+    commissionPercentage: '',
     advancePaid: false,
     advancePercentage: '',
     requirements: ''
@@ -47,6 +48,7 @@ const EventModal = ({
         djIds: event?.djIds || [],
         status: event?.status || 'pending',
         cache: event?.budget || '',
+        commissionPercentage: event?.commission_percentage ?? '',
         advancePaid: false,
         advancePercentage: '',
         requirements: event?.requirements || ''
@@ -148,6 +150,7 @@ const EventModal = ({
         dj_id: Array.isArray(formData?.djIds) && formData?.djIds?.length > 0 ? formData?.djIds[0] : null,
         status: formData?.status,
         cache_value: formData?.cache ? parseFloat(formData?.cache) : null,
+        commission_percentage: formData?.commissionPercentage !== '' ? parseFloat(formData?.commissionPercentage) : null,
         requirements: `${requirementsNote}${formData?.requirements || ''}`.trim()
       };
 
@@ -302,8 +305,8 @@ const EventModal = ({
               </div>
             </div>
 
-            {/* Cachê e Pagamento Antecipado */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Cachê, Comissão e Pagamento Antecipado */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
                 label="Cachê (R$)"
                 type="number"
@@ -311,6 +314,16 @@ const EventModal = ({
                 onChange={(e) => handleInputChange('cache', e?.target?.value)}
                 placeholder="0,00"
                 error={errors?.cache}
+              />
+
+              <Input
+                label="Comissão UNK (%)"
+                type="number"
+                min={0}
+                max={100}
+                value={formData?.commissionPercentage}
+                onChange={(e) => handleInputChange('commissionPercentage', e?.target?.value)}
+                placeholder="Ex: 10"
               />
 
               <div className="space-y-2">
