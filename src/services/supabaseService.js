@@ -540,13 +540,33 @@ storageService.getPublicUrl = (bucket, path) => {
 storageService.uploadJson = async (bucket, path, obj) => {
   try {
     const blob = new Blob([JSON.stringify(obj)], { type: 'application/json' });
-    const { data, error } = await supabase?.storage?.from(bucket)?.upload(path, blob, {
-      cacheControl: '3600',
-      upsert: true,
-      contentType: 'application/json'
-    });
+
+    const attemptUpload = async () => {
+      const { data, error } = await supabase?.storage?.from(bucket)?.upload(path, blob, {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: 'application/json'
+      });
+      return { data, error };
+    };
+
+    let { data, error } = await attemptUpload();
+
+    if (error && typeof error.message === 'string' && /bucket not found/i.test(error.message)) {
+      try {
+        const { error: createErr } = await supabase?.storage?.createBucket(bucket, { public: true });
+        if (createErr) return handleError(createErr, `Bucket "${bucket}" não encontrado e criação automática falhou. Crie o bucket manualmente no painel do Supabase.`);
+        const retry = await attemptUpload();
+        data = retry.data; error = retry.error;
+      } catch (createException) {
+        return handleError(createException, `Erro ao tentar criar o bucket "${bucket}"`);
+      }
+    }
+
     if (error) return handleError(error, 'Erro ao enviar metadata JSON');
-    return { data };
+
+    const { data: { publicUrl } } = supabase?.storage?.from(bucket)?.getPublicUrl(path);
+    return { data: { ...data, publicUrl } };
   } catch (error) {
     return handleError(error, 'Erro de conexão ao enviar metadata JSON');
   }
