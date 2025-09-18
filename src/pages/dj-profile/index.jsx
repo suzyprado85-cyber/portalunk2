@@ -85,6 +85,32 @@ const DJProfile = () => {
     return map;
   }, [djPayments]);
 
+  useEffect(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const completedEvents = djEvents.filter(e => e?.status === 'completed');
+
+    completedEvents.forEach(async (event) => {
+      const eventDate = new Date(event.event_date);
+      eventDate.setHours(23, 59, 59, 999);
+
+      if (today > eventDate) {
+        // Check if payment is still pending for this completed event
+        const payment = paymentsByEvent[event.id];
+        if (payment && (payment.status === 'pending' || payment.status === 'processing')) {
+          try {
+            // Update payment to overdue status
+            await paymentService.update(payment.id, { status: 'overdue' });
+            console.log(`✅ Pagamento ${payment.id} marcado como atrasado`);
+          } catch (error) {
+            console.warn('Falha ao marcar pagamento como atrasado:', payment.id, error);
+          }
+        }
+      }
+    });
+  }, [djEvents, paymentsByEvent]);
+
   const getPaymentStatusFor = (event) => {
     if (!event) return 'pendente';
     const cacheZero = event.cache_value == null || parseFloat(event.cache_value) === 0;
