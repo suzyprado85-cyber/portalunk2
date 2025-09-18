@@ -9,6 +9,7 @@ import DJMediaGallery from './DJMediaGallery';
 import SocialMediaCards from './SocialMediaCards';
 import PendingPaymentsManager from './PendingPaymentsManager';
 import { useSupabaseData } from '../../../hooks/useSupabaseData';
+import { useAuth } from '../../../contexts/AuthContext';
 import { eventService, contractService, paymentService, storageService } from '../../../services/supabaseService';
 
 const DJProfileDetail = ({ dj, onBack }) => {
