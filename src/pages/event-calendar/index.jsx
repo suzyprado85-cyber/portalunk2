@@ -109,8 +109,12 @@ const EventCalendar = () => {
   });
 
   const upcomingEvents = filteredEvents?.filter(event => {
-    const eventDate = new Date(event.date);
+    const s = String(event.date || '');
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    const eventDate = m ? new Date(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10)) : new Date(event.date);
     const today = new Date();
+    eventDate.setHours(0,0,0,0);
+    today.setHours(0,0,0,0);
     return eventDate >= today;
   });
 
