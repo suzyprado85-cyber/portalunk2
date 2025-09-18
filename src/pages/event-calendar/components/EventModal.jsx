@@ -19,6 +19,7 @@ const EventModal = ({
     title: '',
     date: '',
     venue: '',
+    city: '',
     description: '',
     eventType: '',
     producerId: '',
@@ -39,6 +40,7 @@ const EventModal = ({
         title: event?.title || '',
         date: event?.date || '',
         venue: event?.venue || '',
+        city: event?.city || '',
         description: event?.description || '',
         eventType: event?.eventType || '',
         producerId: event?.producerId || '',
@@ -110,21 +112,13 @@ const EventModal = ({
   const validateForm = () => {
     const newErrors = {};
 
-    // Apenas título e data são obrigatórios
-    if (!formData?.title?.trim()) {
-      newErrors.title = 'Título é obrigatório';
-    }
-
-    if (!formData?.date) {
-      newErrors.date = 'Data é obrigatória';
-    }
-
-    // Removido validações obrigatórias para:
-    // - time (horário)
-    // - venue (local)
-    // - eventType (tipo de evento)
-    // - producerId (produtor)
-    // - djIds (DJs)
+    if (!formData?.title?.trim()) newErrors.title = 'Título é obrigatório';
+    if (!formData?.date) newErrors.date = 'Data é obrigatória';
+    if (!formData?.venue?.trim()) newErrors.venue = 'Local é obrigatório';
+    if (!formData?.city?.trim()) newErrors.city = 'Cidade é obrigatória';
+    if (!formData?.producerId) newErrors.producerId = 'Produtor é obrigatório';
+    if (!Array.isArray(formData?.djIds) || formData?.djIds.length === 0) newErrors.djIds = 'Selecione pelo menos um DJ';
+    if (!formData?.cache || isNaN(parseFloat(formData?.cache))) newErrors.cache = 'Cachê é obrigatório';
 
     setErrors(newErrors);
     return Object.keys(newErrors)?.length === 0;
@@ -147,9 +141,10 @@ const EventModal = ({
         title: formData?.title,
         event_date: formData?.date,
         location: formData?.venue,
+        city: formData?.city,
         description: formData?.description,
         type: formData?.eventType || null,
-        producer_id: formData?.producerId || null,
+        producer_id: formData?.producerId,
         dj_id: Array.isArray(formData?.djIds) && formData?.djIds?.length > 0 ? formData?.djIds[0] : null,
         status: formData?.status,
         cache_value: formData?.cache ? parseFloat(formData?.cache) : null,
@@ -235,7 +230,15 @@ const EventModal = ({
                 onChange={(e) => handleInputChange('venue', e?.target?.value)}
                 error={errors?.venue}
                 placeholder="Nome do local"
-                className="md:col-span-2"
+              />
+
+              <Input
+                label="Cidade"
+                type="text"
+                value={formData?.city}
+                onChange={(e) => handleInputChange('city', e?.target?.value)}
+                error={errors?.city}
+                placeholder="Cidade"
               />
             </div>
 
@@ -307,6 +310,7 @@ const EventModal = ({
                 value={formData?.cache}
                 onChange={(e) => handleInputChange('cache', e?.target?.value)}
                 placeholder="0,00"
+                error={errors?.cache}
               />
 
               <div className="space-y-2">
