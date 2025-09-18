@@ -8,6 +8,7 @@ import { storageService } from '../../../services/supabaseService';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const DJMediaGallery = ({ djId }) => {
+  const { userProfile } = useAuth();
   const [mediaFiles, setMediaFiles] = useState({
     logo: [],
     presskit: [],
