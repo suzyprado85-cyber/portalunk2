@@ -89,9 +89,6 @@ const EventCalendar = () => {
     if (filters?.search && !event?.title?.toLowerCase()?.includes(filters?.search?.toLowerCase())) {
       return false;
     }
-    if (filters?.eventType && event?.eventType !== filters?.eventType) {
-      return false;
-    }
     if (filters?.status && event?.status !== filters?.status) {
       return false;
     }
