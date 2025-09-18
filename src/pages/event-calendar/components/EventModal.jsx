@@ -61,14 +61,6 @@ const EventModal = ({
     }
   }, [event, selectedDate]);
 
-  const eventTypeOptions = [
-    { value: 'show', label: 'Show' },
-    { value: 'festival', label: 'Festival' },
-    { value: 'private', label: 'Evento Privado' },
-    { value: 'corporate', label: 'Evento Corporativo' },
-    { value: 'wedding', label: 'Casamento' }
-  ];
-
   const statusOptions = [
     { value: 'pending', label: 'Pendente' },
     { value: 'confirmed', label: 'Confirmado' },
@@ -137,7 +129,7 @@ const EventModal = ({
 
     try {
       const requirementsNote = formData?.advancePaid
-        ? `Pagamento de cachê antecipado: ${formData?.advancePercentage || 0}%\n` : '';
+        ? `Pagamento de cach�� antecipado: ${formData?.advancePercentage || 0}%\n` : '';
 
       const payload = {
         title: formData?.title,
