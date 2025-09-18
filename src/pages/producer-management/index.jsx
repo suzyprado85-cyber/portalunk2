@@ -11,7 +11,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
 const ProducerCard = ({ producer, onView, onEdit, onChangePassword, onSelectDJ }) => {
-  const rawAvatar = producer?.profile_image_url || producer?.avatar_url || '';
+  const rawAvatar = producer?.avatar_url || producer?.profile_image_url || '';
 
   const getAvatarUrl = (raw) => {
     if (!raw) return null;
@@ -375,8 +375,8 @@ const ProducerManagement = () => {
                   <div className="w-20 h-20 rounded-lg overflow-hidden border">
                     {selectedAvatarPreview ? (
                       <img src={selectedAvatarPreview} alt={formData?.name || 'Produtor'} className="w-full h-full object-cover object-center" />
-                    ) : formData?.avatar_url || editData?.profile_image_url ? (
-                      <img src={formData?.avatar_url || editData?.profile_image_url} alt={formData?.name || 'Produtor'} className="w-full h-full object-cover object-center" />
+                    ) : formData?.avatar_url || editData?.avatar_url ? (
+                      <img src={formData?.avatar_url || editData?.avatar_url} alt={formData?.name || 'Produtor'} className="w-full h-full object-cover object-center" />
                     ) : (
                       <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-xl font-semibold">
                         {(formData?.name || 'P').charAt(0)}
