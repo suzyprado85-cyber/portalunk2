@@ -261,7 +261,8 @@ const CompanySettings = () => {
           onChange={(e) => handleInputChange('contract_template', e.target.value)}
           placeholder="Digite o template padrão dos contratos..."
           rows={10}
-          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          disabled={!editing}
+          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
         />
       </div>
       
