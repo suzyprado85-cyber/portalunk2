@@ -78,6 +78,29 @@ const DJProfile = () => {
   const pendingPayments = useMemo(() => (djPayments || []).filter(p => p.status !== 'paid'), [djPayments]);
   const pendingAmount = useMemo(() => pendingPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0), [pendingPayments]);
 
+  const paymentsByEvent = useMemo(() => {
+    const map = {};
+    (djPayments || []).forEach(p => { if (p?.event_id) map[p.event_id] = p; });
+    return map;
+  }, [djPayments]);
+
+  const getPaymentStatusFor = (event) => {
+    if (!event) return 'pendente';
+    const cacheZero = event.cache_value == null || parseFloat(event.cache_value) === 0;
+    if (cacheZero) return 'isento';
+    const p = paymentsByEvent[event.id];
+    if (!p) return 'pendente';
+    if (p.status === 'paid') return 'pago';
+    if (p.status === 'processing') return 'processando';
+    return 'pendente';
+  };
+
+  const getPaymentBadgeClass = (status) => {
+    if (status === 'pago' || status === 'isento') return 'bg-green-600/20 text-green-400 border border-green-500/30';
+    if (status === 'processando') return 'bg-blue-600/20 text-blue-400 border border-blue-500/30';
+    return 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/30';
+  };
+
   // Obter imagem de fundo - prioritizar background_image_url
   const currentBackgroundImage = dj?.background_image_url || 
     dj?.profile_image_url;
@@ -328,6 +351,14 @@ const DJProfile = () => {
                                 {formatDate(event.event_date)}
                               </div>
                               <div className="flex items-center">
+                                <Icon
+                                  name={event.status === 'completed' ? 'CheckCircle' : (event.status === 'confirmed' ? 'BadgeCheck' : 'Clock')}
+                                  size={16}
+                                  className={`mr-2 ${event.status === 'completed' ? 'text-blue-400' : (event.status === 'confirmed' ? 'text-green-400' : 'text-yellow-400')}`}
+                                />
+                                {event.status === 'completed' ? 'Concluído' : (event.status === 'confirmed' ? 'Confirmado' : 'Pendente')}
+                              </div>
+                              <div className="flex items-center">
                                 <Icon name="MapPin" size={16} className="mr-2 text-green-400" />
                                 {event.location}, {event.city}
                               </div>
@@ -335,12 +366,8 @@ const DJProfile = () => {
                           </div>
                           <div className="text-right">
                             <p className="text-2xl font-bold text-white">{formatCurrency(event.cache_value)}</p>
-                            <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                              (event.status === 'confirmed' || event.status === 'completed')
-                                ? (event.status === 'completed' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'bg-green-600/20 text-green-400 border border-green-500/30')
-                                : 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/30'
-                            }`}>
-                              {event.status === 'completed' ? 'Concluído' : (event.status === 'confirmed' ? 'Confirmado' : 'Pendente')}
+                            <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getPaymentBadgeClass(getPaymentStatusFor(event))}`}>
+                              {getPaymentStatusFor(event) === 'pago' ? 'Pago' : getPaymentStatusFor(event) === 'isento' ? 'Isento' : getPaymentStatusFor(event) === 'processando' ? 'Processando' : 'Pendente'}
                             </div>
                           </div>
                         </div>
@@ -374,6 +401,14 @@ const DJProfile = () => {
                               {formatDate(event.event_date)}
                             </div>
                             <div className="flex items-center">
+                              <Icon
+                                name={event.status === 'completed' ? 'CheckCircle' : (event.status === 'confirmed' ? 'BadgeCheck' : 'Clock')}
+                                size={16}
+                                className={`mr-2 ${event.status === 'completed' ? 'text-blue-400' : (event.status === 'confirmed' ? 'text-green-400' : 'text-yellow-400')}`}
+                              />
+                              {event.status === 'completed' ? 'Concluído' : (event.status === 'confirmed' ? 'Confirmado' : 'Pendente')}
+                            </div>
+                            <div className="flex items-center">
                               <Icon name="MapPin" size={16} className="mr-2 text-green-400" />
                               {event.location}, {event.city}
                             </div>
@@ -382,12 +417,8 @@ const DJProfile = () => {
                         </div>
                         <div className="text-right">
                           <p className="text-2xl font-bold text-white">{formatCurrency(event.cache_value)}</p>
-                          <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mt-2 ${
-                            (event.status === 'confirmed' || event.status === 'completed')
-                              ? (event.status === 'completed' ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'bg-green-600/20 text-green-400 border border-green-500/30')
-                              : 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/30'
-                          }`}>
-                            {event.status === 'completed' ? 'Concluído' : (event.status === 'confirmed' ? 'Confirmado' : 'Pendente')}
+                          <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mt-2 ${getPaymentBadgeClass(getPaymentStatusFor(event))}`}>
+                            {getPaymentStatusFor(event) === 'pago' ? 'Pago' : getPaymentStatusFor(event) === 'isento' ? 'Isento' : getPaymentStatusFor(event) === 'processando' ? 'Processando' : 'Pendente'}
                           </div>
                         </div>
                       </div>
