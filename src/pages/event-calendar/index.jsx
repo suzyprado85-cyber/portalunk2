@@ -97,10 +97,10 @@ const EventCalendar = () => {
     if (filters?.status && event?.status !== filters?.status) {
       return false;
     }
-    if (filters?.producer && event?.producerId !== filters?.producer) {
+    if (filters?.producer && String(event?.producerId) !== String(filters?.producer)) {
       return false;
     }
-    if (filters?.dj && !event?.djIds?.includes(filters?.dj)) {
+    if (filters?.dj && !((event?.djIds || []).map(id => String(id)).includes(String(filters?.dj)))) {
       return false;
     }
     return true;
