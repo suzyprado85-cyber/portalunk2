@@ -20,12 +20,13 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
     loading,
     uploadingProof,
     uploadPaymentProof,
+    confirmPayments,
     formatCurrency,
     formatDate,
     isOverdue,
     refetchPayments
-  } = usePendingPayments({ 
-    producerId: userProfile?.id 
+  } = usePendingPayments({
+    producerId: userProfile?.id
   });
 
   const handleFileSelect = (e) => {
