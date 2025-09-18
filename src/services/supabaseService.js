@@ -178,10 +178,25 @@ export const eventService = {
       let { data, error } = await attemptInsert(eventData);
 
       // If error indicates missing column(s), try to remove them and retry once
-      if (error && typeof error.message === 'string') {
-        const missingColMatch = error.message.match(/Could not find the '([^']+)' column/);
-        if (missingColMatch) {
-          const missingCol = missingColMatch[1];
+      if (error) {
+        const errMsg = toMessage(error);
+        // Try several common DB error patterns to extract a missing column name
+        const extractMissingColumn = (msg) => {
+          if (!msg) return null;
+          // Pattern: Could not find the 'type' column of 'events' in the schema cache
+          let m = msg.match(/Could not find the '([^']+)' column/i);
+          if (m) return m[1];
+          // Pattern: column "type" of relation "events" does not exist
+          m = msg.match(/column \"?([a-zA-Z0-9_]+)\"? of (relation|table) \"?[a-zA-Z0-9_]+\"? does not exist/i);
+          if (m) return m[1];
+          // Pattern: column "type" does not exist
+          m = msg.match(/column \"?([a-zA-Z0-9_]+)\"? does not exist/i);
+          if (m) return m[1];
+          return null;
+        };
+
+        const missingCol = extractMissingColumn(errMsg);
+        if (missingCol) {
           console.warn(`Coluna ausente detectada ao criar evento: ${missingCol}. Tentando novamente sem esse campo.`);
           const cleaned = { ...eventData };
           delete cleaned[missingCol];
