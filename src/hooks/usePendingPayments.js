@@ -80,14 +80,22 @@ export const usePendingPayments = (filters = {}) => {
     filters?.search
   ]);
 
-  // Calculate overdue payments (payments older than 30 days)
+  // Calculate overdue payments: either older than 30 days OR event date passed for confirmed events without payment
   const overduePayments = useMemo(() => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     return filteredPayments.filter(payment => {
       const paymentDate = new Date(payment?.created_at);
-      return paymentDate < thirtyDaysAgo;
+
+      // Over 30 days since creation
+      if (paymentDate < thirtyDaysAgo) return true;
+
+      // Or event date passed and payment still pending
+      const eventDate = payment?.event?.event_date ? new Date(payment.event.event_date) : null;
+      if (eventDate && new Date() > eventDate && payment?.status === 'pending') return true;
+
+      return false;
     });
   }, [filteredPayments]);
 
