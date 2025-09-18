@@ -61,25 +61,28 @@ const QuickActions = () => {
   return (
     <div className="bg-card border border-border rounded-lg p-6">
       <h3 className="text-lg font-semibold text-foreground mb-4">Ações Rápidas</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {actions?.map((action) => (
           <Button
             key={action?.id}
-            variant={action?.variant}
+            variant="ghost"
             onClick={() => handleActionClick(action)}
             iconName={action?.icon}
             iconPosition="left"
-            className="h-auto p-4 flex-col items-start text-left gap-1 min-h-[96px]"
+            className={[
+              'h-auto p-6 flex-col items-start text-left gap-1 min-h-[120px] rounded-xl border shadow-none backdrop-blur-xs',
+              colorClasses[action.color] || 'bg-muted/10 border-border/30 hover:bg-muted/20'
+            ].join(' ')}
             fullWidth
           >
-            <div className="w-full" style={{minHeight: '64px'}}>
-              <div className="font-medium text-sm md:text-base mb-1 whitespace-normal break-words line-clamp-2">{action?.label}</div>
-              <div className="text-xs md:text-sm opacity-75 font-normal whitespace-normal break-words line-clamp-2">{action?.description}</div>
+            <div className="w-full">
+              <div className="font-semibold text-base mb-1">{action?.label}</div>
+              <div className="text-sm text-muted-foreground">{action?.description}</div>
             </div>
           </Button>
         ))}
       </div>
-      
+
       {/* Modal para cadastrar produtor */}
       <CreateProducerModal
         defaultOpen={showProducerModal}
