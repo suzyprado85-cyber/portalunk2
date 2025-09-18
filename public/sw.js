@@ -1,110 +1,69 @@
-// Service Worker for Portal UNK PWA
-const CACHE_NAME = 'portal-unk-v1';
-const urlsToCache = [
+// Service Worker for Portal UNK PWA (Vite friendly)
+const CACHE_NAME = 'portal-unk-v2';
+const CORE_ASSETS = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
+  '/index.html',
   '/manifest.json',
   '/logo.png'
 ];
 
-// Install event - cache important resources
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
-      .catch((error) => {
-        console.log('Cache install failed:', error);
-      })
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.addAll(CORE_ASSETS);
+      await self.skipWaiting();
+    })()
   );
 });
 
-// Fetch event - serve from cache when offline
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
-      .catch(() => {
-        // Return a fallback page when offline
-        if (event.request.destination === 'document') {
-          return caches.match('/');
-        }
-      })
-  );
-});
-
-// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : undefined)));
+      await self.clients.claim();
+    })()
   );
 });
 
-// Handle background sync (future enhancement)
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'background-sync') {
-    console.log('Background sync triggered');
-    // Add background sync logic here
-  }
-});
+// Navigation requests -> SPA fallback
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.method !== 'GET') return;
 
-// Handle push notifications (future enhancement)
-self.addEventListener('push', (event) => {
-  console.log('Push notification received');
-  
-  const options = {
-    body: event.data ? event.data.text() : 'Nova notificação do Portal UNK',
-    icon: '/logo.png',
-    badge: '/logo.png',
-    vibrate: [100, 50, 100],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: '1'
-    },
-    actions: [
-      {
-        action: 'explore',
-        title: 'Visualizar',
-        icon: '/logo.png'
-      },
-      {
-        action: 'close',
-        title: 'Fechar',
-        icon: '/logo.png'
-      }
-    ]
-  };
-  
-  event.waitUntil(
-    self.registration.showNotification('Portal UNK', options)
-  );
-});
-
-// Handle notification clicks
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  
-  if (event.action === 'explore') {
-    event.waitUntil(
-      clients.openWindow('/')
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        try {
+          const preload = await event.preloadResponse;
+          if (preload) return preload;
+          const network = await fetch(request);
+          return network;
+        } catch (_) {
+          const cache = await caches.open(CACHE_NAME);
+          return (await cache.match('/index.html')) || (await cache.match('/'));
+        }
+      })()
     );
+    return;
   }
+
+  // Static assets: cache-first with network fallback
+  event.respondWith(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      const cached = await cache.match(request);
+      if (cached) return cached;
+      try {
+        const resp = await fetch(request);
+        if (resp && resp.status === 200 && resp.type === 'basic') {
+          cache.put(request, resp.clone());
+        }
+        return resp;
+      } catch (_) {
+        return cached || Response.error();
+      }
+    })()
+  );
 });
