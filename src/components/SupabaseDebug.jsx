@@ -118,7 +118,7 @@ const SupabaseDebug = () => {
             <strong>URL:</strong> {import.meta.env?.VITE_SUPABASE_URL ? '✅ Configurada' : '❌ Não configurada'}
           </div>
           <div className="text-muted-foreground">
-            <strong>Key:</strong> {import.meta.env?.VITE_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ Não configurada'}
+            <strong>Key:</strong> {(import.meta.env?.VITE_SUPABASE_ANON_KEY || import.meta.env?.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY) ? '✅ Configurada' : '❌ Não configurada'}
           </div>
         </div>
       </div>

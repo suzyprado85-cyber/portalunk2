@@ -53,7 +53,10 @@ const EventModal = ({
         requirements: event?.requirements || ''
       });
     } else if (selectedDate) {
-      const dateStr = selectedDate?.toISOString()?.split('T')?.[0];
+      const y = selectedDate.getFullYear();
+      const m = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const d = String(selectedDate.getDate()).padStart(2, '0');
+      const dateStr = `${y}-${m}-${d}`; // local date, no timezone shift
       setFormData(prev => ({
         ...prev,
         date: dateStr

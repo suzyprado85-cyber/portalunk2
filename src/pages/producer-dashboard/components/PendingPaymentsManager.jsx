@@ -7,7 +7,7 @@ import Input from '../../../components/ui/Input';
 import { usePendingPayments } from '../../../hooks/usePendingPayments';
 import { useAuth } from '../../../contexts/AuthContext';
 
-const PendingPaymentsManager = ({ onPaymentUpdate }) => {
+const PendingPaymentsManager = ({ onPaymentUpdate, producerId: producerIdProp = null, djId: djIdProp = null }) => {
   const getEventDJNames = (event) => {
     if (!event) return [];
     const extras = Array.isArray(event?.event_djs)
@@ -17,6 +17,7 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
     return all;
   };
   const { userProfile } = useAuth();
+  const effectiveProducerId = producerIdProp ?? userProfile?.id ?? null;
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedPaymentId, setSelectedPaymentId] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -35,7 +36,8 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
     isOverdue,
     refetchPayments
   } = usePendingPayments({
-    producerId: userProfile?.id
+    producerId: effectiveProducerId,
+    djId: djIdProp ?? undefined
   });
 
   // Enhanced overdue detection for completed events

@@ -25,10 +25,14 @@ const MonthlyCalendar = ({
   }
 
   const getEventsForDate = (date) => {
-    const dateStr = date?.toISOString()?.split('T')?.[0];
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${d}`; // local date key
     return events?.filter(event => {
-      const eventDate = new Date(event.date)?.toISOString()?.split('T')?.[0];
-      return eventDate === dateStr;
+      const evStr = String(event.date || '');
+      const evKey = evStr.split('T')[0];
+      return evKey === dateStr;
     });
   };
 

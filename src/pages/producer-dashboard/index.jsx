@@ -31,9 +31,11 @@ const ProducerDashboard = () => {
   const { data: realtimePayments } = useRealtimeData('payments', payments);
 
   // Calcular pagamentos pendentes do produtor
-  const pendingPaymentsCount = (realtimePayments || []).filter(p => p.status === 'pending').length;
+  const pendingPaymentsCount = (realtimePayments || []).filter(p => (
+    p.status === 'pending' || p.status === 'processing' || p.status === 'overdue'
+  )).length;
   const totalPendingAmount = (realtimePayments || [])
-    .filter(p => p.status === 'pending')
+    .filter(p => (p.status === 'pending' || p.status === 'processing' || p.status === 'overdue'))
     .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
 
   // Filtrar apenas DJs que têm eventos contratados com este produtor
