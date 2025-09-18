@@ -140,51 +140,19 @@ const DJProfileDetail = ({ dj, onBack }) => {
               </h1>
               
              
-              {/* Links das redes sociais - igual à imagem */}
-              <div className="flex justify-center gap-3">
+              {/* Links das redes sociais - estilo pílula igual à imagem */}
+              <div className="flex justify-center gap-3 flex-wrap">
                 {dj?.soundcloud && (
-                  <a
-                    href={dj.soundcloud.startsWith('http') ? dj.soundcloud : `https://soundcloud.com/${dj.soundcloud}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 px-4 py-2 bg-orange-500/80 hover:bg-orange-500 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105"
-                  >
-                    <Icon name="Music" size={16} />
-                    <span>SoundCloud</span>
-                  </a>
+                  <SocialPill id="soundcloud" name="SoundCloud" icon="SoundCloud" href={normalizeSocialUrl('soundcloud', dj?.soundcloud)} />
                 )}
                 {dj?.instagram && (
-                  <a
-                    href={dj.instagram.startsWith('http') ? dj.instagram : `https://instagram.com/${dj.instagram.replace('@', '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 px-4 py-2 bg-[rgba(222,8,50,0.56)] text-white rounded-xl font-normal transition-all duration-200 hover:scale-105"
-                  >
-                    <Icon name="Instagram" size={16} />
-                    <span>Instagram</span>
-                  </a>
+                  <SocialPill id="instagram" name="Instagram" icon="Instagram" href={normalizeSocialUrl('instagram', dj?.instagram)} />
                 )}
                 {dj?.youtube && (
-                  <a
-                    href={dj.youtube.startsWith('http') ? dj.youtube : `https://youtube.com/${dj.youtube}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105"
-                  >
-                    <Icon name="Play" size={16} />
-                    <span>YouTube</span>
-                  </a>
+                  <SocialPill id="youtube" name="YouTube" icon="YouTube" href={normalizeSocialUrl('youtube', dj?.youtube)} />
                 )}
                 {dj?.spotify && (
-                  <a
-                    href={dj.spotify.startsWith('http') ? dj.spotify : `https://open.spotify.com/artist/${dj.spotify}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 px-4 py-2 bg-green-500/80 hover:bg-green-500 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105"
-                  >
-                    <Icon name="Music" size={16} />
-                    <span>Spotify</span>
-                  </a>
+                  <SocialPill id="spotify" name="Spotify" icon="Music" href={normalizeSocialUrl('spotify', dj?.spotify)} />
                 )}
               </div>
             </div>
