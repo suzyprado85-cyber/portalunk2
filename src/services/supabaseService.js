@@ -336,8 +336,8 @@ export const eventService = {
           const commissionAmount = (parseFloat(cacheValue) * (commissionPct / 100));
 
           if (!existing) {
-            // Create new pending payment
-            await supabase?.from('payments')?.insert({
+            // Create new pending payment using safe helper
+            const paymentPayload = {
               event_id: id,
               amount: parseFloat(cacheValue),
               status: 'pending',
@@ -346,16 +346,62 @@ export const eventService = {
               dj_id: updatedEvent?.dj?.id || updates?.dj_id || null,
               producer_id: updatedEvent?.producer?.id || updates?.producer_id || null,
               created_at: new Date().toISOString()
-            });
+            };
+
+            const insertPayment = async (payload) => {
+              const { data: payData, error: payErr } = await supabase?.from('payments')?.insert(payload);
+              if (payErr) {
+                const msg = toMessage(payErr);
+                if (/commission_percentage/i.test(msg) || /commission_percetage/i.test(msg)) {
+                  const alt = { ...payload };
+                  if (alt.commission_percentage !== undefined) {
+                    alt.commission_percetage = alt.commission_percentage;
+                    delete alt.commission_percentage;
+                  }
+                  const { data: d2, error: e2 } = await supabase?.from('payments')?.insert(alt);
+                  if (e2) throw e2;
+                  return d2;
+                }
+                const cleaned = { ...payload };
+                delete cleaned.commission_percentage;
+                delete cleaned.commission_amount;
+                const { data: d3, error: e3 } = await supabase?.from('payments')?.insert(cleaned);
+                if (e3) throw e3;
+                return d3;
+              }
+              return payData;
+            };
+
+            await insertPayment(paymentPayload);
           } else {
             // If payment exists and is not paid, update amounts/commission
             if (existing.status !== 'paid') {
-              await supabase?.from('payments')?.update({
+              const updatePayload = {
                 amount: parseFloat(cacheValue),
                 commission_percentage: commissionPct,
                 commission_amount: commissionAmount,
                 updated_at: new Date().toISOString()
-              })?.eq('id', existing.id);
+              };
+
+              const { data: upd, error: updErr } = await supabase?.from('payments')?.update(updatePayload)?.eq('id', existing.id);
+              if (updErr) {
+                const msg = toMessage(updErr);
+                if (/commission_percentage/i.test(msg) || /commission_percetage/i.test(msg)) {
+                  const alt = { ...updatePayload };
+                  if (alt.commission_percentage !== undefined) {
+                    alt.commission_percetage = alt.commission_percentage;
+                    delete alt.commission_percentage;
+                  }
+                  const { data: d2, error: e2 } = await supabase?.from('payments')?.update(alt)?.eq('id', existing.id);
+                  if (e2) throw e2;
+                } else {
+                  const cleaned = { ...updatePayload };
+                  delete cleaned.commission_percentage;
+                  delete cleaned.commission_amount;
+                  const { data: d3, error: e3 } = await supabase?.from('payments')?.update(cleaned)?.eq('id', existing.id);
+                  if (e3) throw e3;
+                }
+              }
             }
           }
         } else {
