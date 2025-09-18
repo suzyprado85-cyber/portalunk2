@@ -225,6 +225,46 @@ export const usePendingPayments = (filters = {}) => {
   }, [refetchPayments]);
 
   // Bulk operations
+  const confirmPayments = useCallback(async (paymentIds, { payment_method, paid_at, file }) => {
+    if (!paymentIds || paymentIds.length === 0) {
+      toast.error('Selecione pelo menos um pagamento');
+      return { error: 'Nenhum pagamento selecionado' };
+    }
+
+    setLoading(true);
+    try {
+      // Upload proof once per payment
+      const results = [];
+      for (const id of paymentIds) {
+        let proofUrl = null;
+        if (file) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `payment_${id}_${Date.now()}.${fileExt}`;
+          const filePath = `payment-proofs/${fileName}`;
+          const { data: uploadData, error: uploadError } = await storageService.uploadFile('payment-proofs', filePath, file);
+          if (uploadError) throw new Error(uploadError);
+          proofUrl = uploadData.publicUrl;
+        }
+        const res = await paymentService.confirmPayment(id, { payment_method, paid_at, proofUrl });
+        results.push(res);
+      }
+
+      const errors = results.filter(r => r?.error);
+      const successes = results.filter(r => !r?.error);
+      if (errors.length > 0) toast.error(`${errors.length} pagamentos falharam ao confirmar`);
+      if (successes.length > 0) toast.success(`${successes.length} pagamentos confirmados como pagos!`);
+
+      await refetchPayments();
+      return { data: { successes: successes.length, errors: errors.length } };
+    } catch (error) {
+      console.error('Erro ao confirmar pagamentos:', error);
+      toast.error('Erro ao confirmar pagamentos');
+      return { error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  }, [refetchPayments]);
+
   const bulkMarkAsPaid = useCallback(async (paymentIds) => {
     if (!paymentIds || paymentIds.length === 0) {
       toast.error('Selecione pelo menos um pagamento');
@@ -364,6 +404,25 @@ export const usePendingPayments = (filters = {}) => {
     };
   }, [refetchPayments]);
 
+  const deletePayment = useCallback(async (paymentId) => {
+    if (!paymentId) return { error: 'ID inválido' };
+    if (!window.confirm('Confirma a exclusão desta transação?')) return { cancelled: true };
+    setLoading(true);
+    try {
+      const result = await paymentService.delete(paymentId);
+      if (result?.error) throw new Error(result.error);
+      await refetchPayments();
+      toast.success('Transação excluída com sucesso');
+      return { data: result.data };
+    } catch (error) {
+      console.error('Erro ao excluir transação:', error);
+      toast.error('Erro ao excluir transação');
+      return { error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  }, [refetchPayments]);
+
   return {
     // Data
     payments: filteredPayments,
@@ -378,7 +437,9 @@ export const usePendingPayments = (filters = {}) => {
     // Actions
     uploadPaymentProof,
     markAsPaid,
+    confirmPayments,
     bulkMarkAsPaid,
+    deletePayment,
     refetchPayments,
     
     // Filters and queries
