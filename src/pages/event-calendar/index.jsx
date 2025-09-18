@@ -167,15 +167,19 @@ const EventCalendar = () => {
 
   const handleDeleteEvent = async (eventId) => {
     try {
-      // Marca o evento como cancelado ao invés de excluir
-      await eventService?.update(eventId, { status: 'cancelled' });
+      if (!window.confirm('Deseja excluir este evento permanentemente? Essa ação não pode ser desfeita.')) return;
+
+      // Deleta evento do backend
+      const res = await eventService?.delete(eventId);
+      if (res?.error) throw new Error(res.error);
+
       await refetchEvents();
       setIsEventModalOpen(false);
       // Mostra mensagem de sucesso
-      alert('Evento cancelado com sucesso!');
+      alert('Evento excluído com sucesso!');
     } catch (e) {
-      console.error('Erro ao cancelar evento:', e);
-      alert('Erro ao cancelar evento');
+      console.error('Erro ao excluir evento:', e);
+      alert('Erro ao excluir evento');
     }
   };
 
