@@ -20,7 +20,6 @@ const FinancialTracking = () => {
   const [userRole] = useState('admin');
   const [isSidebarHover, setIsSidebarHover] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -162,12 +161,6 @@ const FinancialTracking = () => {
     setConfirmModalOpen(true);
   };
 
-  const handleUploadReceipt = () => {};
-
-  const handleUploadComplete = (uploadedFiles) => {
-    console.log('Upload completed:', uploadedFiles);
-    // In a real app, this would update the transactions with the uploaded files
-  };
 
   if (loading) {
     return (
