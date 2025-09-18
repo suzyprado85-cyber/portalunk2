@@ -186,36 +186,50 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          isOverdue(payment) 
-                            ? 'bg-red-500/20 text-red-500' 
-                            : 'bg-yellow-500/20 text-yellow-500'
-                        }`}>
-                          {isOverdue(payment) ? 'Em Atraso' : 'Pendente'}
-                        </span>
-                        {payment?.payment_proof_url && (
+                        {payment?.status === 'paid' ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-500">Pago</span>
+                        ) : (payment?.status === 'processing' || payment?.payment_proof_url) ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-500">Enviado</span>
+                        ) : (
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${isOverdue(payment) ? 'bg-red-500/20 text-red-500' : 'bg-yellow-500/20 text-yellow-500'}`}>{isOverdue(payment) ? 'Em Atraso' : 'Pendente'}</span>
+                        )}
+                        {payment?.status === 'paid' && payment?.payment_proof_url && (
                           <a
                             href={payment.payment_proof_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center text-blue-500 hover:text-blue-600 text-sm"
+                            className="inline-flex items-center text-primary hover:text-primary/80"
+                            title="Visualizar comprovante"
                           >
-                            <Icon name="FileText" size={14} className="mr-1" />
-                            Ver Comprovante
+                            <Icon name="Eye" size={16} />
                           </a>
                         )}
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <Button
-                          onClick={() => openUploadModal(payment.id)}
-                          variant="default"
-                          size="sm"
-                          iconName="Check"
-                          disabled={payment?.status === 'paid'}
-                        >
-                          Dar Baixa
-                        </Button>
+                        {payment?.status === 'paid' ? (
+                          <Button variant="success" size="sm" iconName="Check" disabled>
+                            Pago
+                          </Button>
+                        ) : (payment?.status === 'processing' || payment?.payment_proof_url) ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-blue-500 text-white border-blue-500 hover:bg-blue-600 hover:border-blue-600"
+                            disabled
+                          >
+                            Enviado Pagamento
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => openUploadModal(payment.id)}
+                            variant="default"
+                            size="sm"
+                            iconName="Check"
+                          >
+                            Dar Baixa
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
