@@ -8,6 +8,14 @@ import { usePendingPayments } from '../../../hooks/usePendingPayments';
 import { useAuth } from '../../../contexts/AuthContext';
 
 const PendingPaymentsManager = ({ onPaymentUpdate }) => {
+  const getEventDJNames = (event) => {
+    if (!event) return [];
+    const extras = Array.isArray(event?.event_djs)
+      ? event.event_djs.map(ed => ed?.dj?.name).filter(Boolean)
+      : [];
+    const all = [event?.dj?.name, ...extras].filter(Boolean);
+    return all;
+  };
   const { userProfile } = useAuth();
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedPaymentId, setSelectedPaymentId] = useState(null);
@@ -149,7 +157,9 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {payments.map((payment) => (
+            {payments.map((payment) => {
+              const djNames = getEventDJNames(payment?.event);
+              return (
               <div key={payment.id} className="p-6 hover:bg-muted/30 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -159,7 +169,7 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
                           {payment?.event?.title || 'Evento sem título'}
                         </h4>
                         <p className="text-sm text-muted-foreground">
-                          DJ: {payment?.event?.dj?.name || 'N/A'}
+                          DJs: {djNames?.length ? djNames.join(', ') : 'N/A'}
                         </p>
                       </div>
                       <div className="text-right">
@@ -230,7 +240,8 @@ const PendingPaymentsManager = ({ onPaymentUpdate }) => {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
