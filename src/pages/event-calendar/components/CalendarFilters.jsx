@@ -71,13 +71,6 @@ const CalendarFilters = ({
         />
 
         <Select
-          label="Tipo de Evento"
-          options={eventTypeOptions}
-          value={filters?.eventType}
-          onChange={(value) => handleFilterChange('eventType', value)}
-        />
-
-        <Select
           label="Status"
           options={statusOptions}
           value={filters?.status}
