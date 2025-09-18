@@ -184,8 +184,8 @@ export const producerService = {
       const fileName = `${producerId}-${Date.now()}.${fileExt}`;
       const filePath = `producers/${fileName}`;
 
-      // Use a known existing bucket in the app (dj-media). Folder keeps producers separated.
-      const bucket = 'dj-media';
+      // Bucket dedicado para produtores (conforme solicitado)
+      const bucket = 'producer-avatar';
       const uploadRes = await storageService.uploadFile(bucket, filePath, file);
       if (uploadRes?.error) {
         const msg = typeof uploadRes.error === 'string' ? uploadRes.error : (uploadRes.error?.message || 'Falha no upload');
