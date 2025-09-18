@@ -139,7 +139,7 @@ export const eventService = {
           *,
           dj:djs(id, name, profile_image_url, is_active),
           producer:profiles(id, name, company_name),
-          events_djs:events_djs(
+          event_djs:event_djs(
             dj:djs(id, name, profile_image_url, is_active)
           )
         `)?.order('event_date', { ascending: false });
@@ -172,7 +172,7 @@ export const eventService = {
           *,
           dj:djs(id, name, profile_image_url, is_active),
           producer:profiles(id, name, company_name),
-          events_djs:events_djs(
+          event_djs:event_djs(
             dj:djs(id, name, profile_image_url, is_active)
           )
         `)?.eq('producer_id', producerId)?.order('event_date', { ascending: false });
@@ -254,11 +254,11 @@ export const eventService = {
           const extraDjIds = (incomingList || []).filter(id => String(id) !== String(primaryDjId));
           if (createdEvent?.id && extraDjIds.length > 0) {
             const rows = extraDjIds.map(djId => ({ event_id: createdEvent.id, dj_id: djId }));
-            const { error: jdErr } = await supabase?.from('events_djs')?.insert(rows);
+            const { error: jdErr } = await supabase?.from('event_djs')?.insert(rows);
             if (jdErr) {
               const msg = toMessage(jdErr);
-              if (!/relation\s+"?events_djs"?\s+does not exist/i.test(msg)) {
-                console.warn('Falha ao inserir DJs extras em events_djs:', jdErr);
+              if (!/relation\s+"?event_djs"?\s+does not exist/i.test(msg)) {
+                console.warn('Falha ao inserir DJs extras em event_djs:', jdErr);
               }
             }
           }
@@ -388,21 +388,21 @@ export const eventService = {
           const primaryDjId = updates?.dj_id ?? updatedEvent?.dj?.id ?? null;
           if (updatedEvent?.id && Array.isArray(incomingList)) {
             // Replace existing links with provided extras (excluding primary)
-            const { error: delErr } = await supabase?.from('events_djs')?.delete()?.eq('event_id', id);
+            const { error: delErr } = await supabase?.from('event_djs')?.delete()?.eq('event_id', id);
             if (delErr) {
               const msg = toMessage(delErr);
-              if (!/relation\s+"?events_djs"?\s+does not exist/i.test(msg)) {
-                console.warn('Falha ao limpar vínculos events_djs:', delErr);
+              if (!/relation\s+"?event_djs"?\s+does not exist/i.test(msg)) {
+                console.warn('Falha ao limpar vínculos event_djs:', delErr);
               }
             } else {
               const extras = incomingList.filter(did => String(did) !== String(primaryDjId));
               if (extras.length > 0) {
                 const rows = extras.map(djId => ({ event_id: id, dj_id: djId }));
-                const { error: insErr } = await supabase?.from('events_djs')?.insert(rows);
+                const { error: insErr } = await supabase?.from('event_djs')?.insert(rows);
                 if (insErr) {
                   const msg2 = toMessage(insErr);
-                  if (!/relation\s+"?events_djs"?\s+does not exist/i.test(msg2)) {
-                    console.warn('Falha ao inserir vínculos events_djs:', insErr);
+                  if (!/relation\s+"?event_djs"?\s+does not exist/i.test(msg2)) {
+                    console.warn('Falha ao inserir vínculos event_djs:', insErr);
                   }
                 }
               }
