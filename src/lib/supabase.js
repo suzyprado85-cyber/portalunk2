@@ -24,7 +24,7 @@ const getRuntimeVar = (name) => {
 };
 
 const rawUrl = getRuntimeVar('VITE_SUPABASE_URL');
-const rawKey = getRuntimeVar('VITE_SUPABASE_ANON_KEY') ?? getRuntimeVar('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY');
+const rawKey = getRuntimeVar('VITE_SUPABASE_ANON_KEY') ?? getRuntimeVar('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY') ?? getRuntimeVar('VITE_SUPABASE_PUBLISHABLE_KEY');
 
 const sanitize = (v) => (typeof v === 'string' ? v : '')
   .trim()
