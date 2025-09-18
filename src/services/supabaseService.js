@@ -17,6 +17,17 @@ const handleError = (error, context) => {
   return { error: toMessage(error) };
 };
 
+// Parse a Supabase 'date' (YYYY-MM-DD) as a local Date at midnight to avoid timezone shifts
+const dateOnlyToLocalDate = (v) => {
+  if (!v) return null;
+  if (v instanceof Date) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
+  const s = String(v);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+  const d = new Date(s);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+};
+
 // Ensure current user has admin role
 const ensureAdmin = async () => {
   try {
@@ -163,7 +174,8 @@ export const eventService = {
       today.setHours(0, 0, 0, 0);
       
       const eventsToUpdate = (data || []).filter(event => {
-        const eventDate = new Date(event.event_date);
+        const eventDate = dateOnlyToLocalDate(event.event_date);
+        if (!eventDate) return false;
         eventDate.setHours(0, 0, 0, 0);
         return eventDate < today && event.status !== 'completed' && event.status !== 'cancelled';
       });
@@ -186,10 +198,10 @@ export const eventService = {
       const paymentsToUpdate = [];
       for (const event of data || []) {
         if (event.status === 'completed') {
-          const eventDate = new Date(event.event_date);
-          eventDate.setHours(23, 59, 59, 999);
-          
-          if (today > eventDate) {
+          const eventDate = dateOnlyToLocalDate(event.event_date);
+          if (eventDate) eventDate.setHours(23, 59, 59, 999);
+
+          if (eventDate && today > eventDate) {
             // Check if there are pending payments for this event
             const { data: pendingPayments } = await supabase
               ?.from('payments')
@@ -247,6 +259,43 @@ export const eventService = {
         `)?.eq('producer_id', producerId)?.order('event_date', { ascending: false });
         if (basic?.error) return handleError(basic.error, 'Erro ao carregar eventos do produtor');
         data = basic?.data;
+      }
+
+      // Auto-update completed and overdue for this producer as well
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const toComplete = (data || []).filter(ev => {
+        const d = dateOnlyToLocalDate(ev.event_date);
+        if (!d) return false;
+        d.setHours(0, 0, 0, 0);
+        return d < today && ev.status !== 'completed' && ev.status !== 'cancelled';
+      });
+      for (const ev of toComplete) {
+        try {
+          await supabase?.from('events')?.update({ status: 'completed' })?.eq('id', ev.id);
+          const idx = data.findIndex(e => e.id === ev.id);
+          if (idx !== -1) data[idx].status = 'completed';
+        } catch (e) {
+          console.warn('Falha ao completar evento (producer scope):', ev.id, e);
+        }
+      }
+      const overdueIds = [];
+      for (const ev of data || []) {
+        if (ev.status === 'completed') {
+          const end = dateOnlyToLocalDate(ev.event_date);
+          if (end) end.setHours(23, 59, 59, 999);
+          if (end && today > end) {
+            const { data: pend } = await supabase?.from('payments')?.select('id, status')?.eq('event_id', ev.id)?.in('status', ['pending', 'processing']);
+            if (pend && pend.length) overdueIds.push(...pend.map(p => p.id));
+          }
+        }
+      }
+      if (overdueIds.length > 0) {
+        try {
+          await supabase?.from('payments')?.update({ status: 'overdue' })?.in('id', overdueIds);
+        } catch (e) {
+          console.warn('Falha ao marcar pagamentos em atraso (producer scope):', e);
+        }
       }
 
       return { data: data || [] };
