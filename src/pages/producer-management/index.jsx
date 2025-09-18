@@ -6,12 +6,32 @@ import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useSupabaseData } from '../../hooks/useSupabaseData';
-import { producerService, djService } from '../../services/supabaseService';
+import { producerService, djService, storageService } from '../../services/supabaseService';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
 const ProducerCard = ({ producer, onView, onEdit, onChangePassword, onSelectDJ }) => {
-  const avatar = producer?.profile_image_url || producer?.avatar_url || null;
+  const rawAvatar = producer?.profile_image_url || producer?.avatar_url || '';
+
+  const getAvatarUrl = (raw) => {
+    if (!raw) return null;
+    if (typeof raw === 'string' && raw.startsWith('http')) return raw;
+    // If value looks like a storage path, try common buckets
+    try {
+      const candidates = ['avatars', 'producers', 'public'];
+      for (const bucket of candidates) {
+        const url = storageService.getPublicUrl(bucket, raw);
+        if (url) return url;
+      }
+    } catch (e) {
+      // ignore
+    }
+    // fallback to raw
+    return raw;
+  };
+
+  const avatar = getAvatarUrl(rawAvatar);
+
   return (
     <div className="bg-card/90 backdrop-blur-md border border-border/60 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10 min-h-[220px]">
       <div className="flex items-start space-x-5">

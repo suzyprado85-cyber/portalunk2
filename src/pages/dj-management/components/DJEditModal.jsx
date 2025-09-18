@@ -222,12 +222,33 @@ const DJEditModal = ({ dj, isOpen, onClose, onSave }) => {
                 placeholder="5000"
               />
 
-              <Input
-                label="Gêneros Musicais (separe por vírgula)"
-                value={(formData.musical_genres || []).join(', ')}
-                onChange={(e) => setFormData(prev => ({ ...prev, musical_genres: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
-                placeholder="House, Tech House, Techno"
-              />
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Gêneros Musicais</label>
+                <div className="space-y-2">
+                  {(formData.musical_genres || []).map((g, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={g}
+                        onChange={(e) => setFormData(prev => {
+                          const arr = Array.isArray(prev.musical_genres) ? [...prev.musical_genres] : [];
+                          arr[idx] = e.target.value;
+                          return { ...prev, musical_genres: arr };
+                        })}
+                        className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                        placeholder="Escreva livremente"
+                      />
+                      <button type="button" onClick={() => setFormData(prev => ({ ...prev, musical_genres: (prev.musical_genres || []).filter((_, i) => i !== idx) }))} className="text-error px-2">✕</button>
+                    </div>
+                  ))}
+
+                  <div>
+                    <button type="button" onClick={() => setFormData(prev => ({ ...prev, musical_genres: Array.isArray(prev.musical_genres) ? [...prev.musical_genres, ''] : [''] }))} className="px-3 py-2 bg-primary text-primary-foreground rounded-md">
+                      + Adicionar Gênero
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Redes Sociais */}

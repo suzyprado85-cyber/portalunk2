@@ -182,16 +182,17 @@ export const producerService = {
       const fileName = `${producerId}-${Date.now()}.${fileExt}`;
       const filePath = `producers/${fileName}`;
 
-      const { error: uploadError } = await supabase?.storage?.from('avatars')?.upload(filePath, file);
-      if (uploadError) {
-        return handleError(uploadError, 'Erro ao fazer upload da imagem');
+      // Use storageService to upload (handles bucket not found and public URL retrieval)
+      const uploadRes = await storageService.uploadFile('avatars', filePath, file);
+      if (uploadRes?.error) {
+        return handleError(uploadRes.error, 'Erro ao fazer upload da imagem');
       }
 
-      const { data: { publicUrl } } = supabase?.storage?.from('avatars')?.getPublicUrl(filePath);
-      
+      const publicUrl = uploadRes?.data?.publicUrl;
+
       // Update profile with avatar URL
-      const { error: updateError } = await supabase?.from('profiles')?.update({ 
-        profile_image_url: publicUrl 
+      const { error: updateError } = await supabase?.from('profiles')?.update({
+        profile_image_url: publicUrl
       })?.eq('id', producerId);
 
       if (updateError) {

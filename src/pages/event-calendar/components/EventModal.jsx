@@ -5,15 +5,15 @@ import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import { Checkbox } from '../../../components/ui/Checkbox';
 
-const EventModal = ({ 
-  isOpen, 
-  onClose, 
-  event, 
-  onSave, 
+const EventModal = ({
+  isOpen,
+  onClose,
+  event,
+  onSave,
   onDelete,
   producers,
   djs,
-  selectedDate 
+  selectedDate
 }) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -21,11 +21,12 @@ const EventModal = ({
     venue: '',
     city: '',
     description: '',
-    eventType: '',
     producerId: '',
     djIds: [],
     status: 'pending',
     cache: '',
+    cacheIsento: false,
+    commissionPercentage: '',
     advancePaid: false,
     advancePercentage: '',
     requirements: ''
@@ -42,11 +43,11 @@ const EventModal = ({
         venue: event?.venue || '',
         city: event?.city || '',
         description: event?.description || '',
-        eventType: event?.eventType || '',
         producerId: event?.producerId || '',
         djIds: event?.djIds || [],
         status: event?.status || 'pending',
         cache: event?.budget || '',
+        commissionPercentage: event?.commission_percentage ?? '',
         advancePaid: false,
         advancePercentage: '',
         requirements: event?.requirements || ''
@@ -59,14 +60,6 @@ const EventModal = ({
       }));
     }
   }, [event, selectedDate]);
-
-  const eventTypeOptions = [
-    { value: 'show', label: 'Show' },
-    { value: 'festival', label: 'Festival' },
-    { value: 'private', label: 'Evento Privado' },
-    { value: 'corporate', label: 'Evento Corporativo' },
-    { value: 'wedding', label: 'Casamento' }
-  ];
 
   const statusOptions = [
     { value: 'pending', label: 'Pendente' },
@@ -118,7 +111,8 @@ const EventModal = ({
     if (!formData?.city?.trim()) newErrors.city = 'Cidade é obrigatória';
     if (!formData?.producerId) newErrors.producerId = 'Produtor é obrigatório';
     if (!Array.isArray(formData?.djIds) || formData?.djIds.length === 0) newErrors.djIds = 'Selecione pelo menos um DJ';
-    if (!formData?.cache || isNaN(parseFloat(formData?.cache))) newErrors.cache = 'Cachê é obrigatório';
+    // Cachê é obrigatório apenas quando não for isento
+    if (!formData?.cacheIsento && (!formData?.cache || isNaN(parseFloat(formData?.cache)))) newErrors.cache = 'Cachê é obrigatório, ou marque como isento';
 
     setErrors(newErrors);
     return Object.keys(newErrors)?.length === 0;
@@ -143,11 +137,12 @@ const EventModal = ({
         location: formData?.venue,
         city: formData?.city,
         description: formData?.description,
-        type: formData?.eventType || null,
         producer_id: formData?.producerId,
         dj_id: Array.isArray(formData?.djIds) && formData?.djIds?.length > 0 ? formData?.djIds[0] : null,
         status: formData?.status,
-        cache_value: formData?.cache ? parseFloat(formData?.cache) : null,
+        // cache_value must be NOT NULL in DB; use 0.00 to represent isento
+        cache_value: formData?.cacheIsento ? 0.00 : (formData?.cache ? parseFloat(formData?.cache) : 0.00),
+        commission_percentage: formData?.commissionPercentage !== '' ? parseFloat(formData?.commissionPercentage) : 20.00,
         requirements: `${requirementsNote}${formData?.requirements || ''}`.trim()
       };
 
@@ -205,13 +200,6 @@ const EventModal = ({
                 placeholder="Nome do evento"
               />
 
-              <Select
-                label="Tipo de Evento"
-                options={eventTypeOptions}
-                value={formData?.eventType}
-                onChange={(value) => handleInputChange('eventType', value)}
-                error={errors?.eventType}
-              />
 
               <Input
                 label="Data"
@@ -302,15 +290,37 @@ const EventModal = ({
               </div>
             </div>
 
-            {/* Cachê e Pagamento Antecipado */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Cachê, Comissão e Pagamento Antecipado */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Input
+                  label="Cachê (R$)"
+                  type="number"
+                  value={formData?.cache}
+                  onChange={(e) => handleInputChange('cache', e?.target?.value)}
+                  placeholder="0,00"
+                  error={errors?.cache}
+                  disabled={formData?.cacheIsento}
+                />
+                <div className="mt-2 flex items-center space-x-2">
+                  <input
+                    id="cacheIsento"
+                    type="checkbox"
+                    checked={!!formData?.cacheIsento}
+                    onChange={(e) => handleInputChange('cacheIsento', e.target.checked)}
+                  />
+                  <label htmlFor="cacheIsento" className="text-sm text-muted-foreground">Cachê isento</label>
+                </div>
+              </div>
+
               <Input
-                label="Cachê (R$)"
+                label="Comissão UNK (%)"
                 type="number"
-                value={formData?.cache}
-                onChange={(e) => handleInputChange('cache', e?.target?.value)}
-                placeholder="0,00"
-                error={errors?.cache}
+                min={0}
+                max={100}
+                value={formData?.commissionPercentage}
+                onChange={(e) => handleInputChange('commissionPercentage', e?.target?.value)}
+                placeholder="Ex: 10"
               />
 
               <div className="space-y-2">

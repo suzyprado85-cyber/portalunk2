@@ -78,6 +78,12 @@ const DJMediaGallery = ({ djId }) => {
         });
 
         setMediaFiles(newMediaFiles);
+
+        // If current selected category is empty, pick first non-empty
+        const firstNonEmpty = Object.keys(newMediaFiles).find(k => (newMediaFiles[k] || []).length > 0);
+        if (firstNonEmpty && (newMediaFiles[selectedCategory] || []).length === 0) {
+          setSelectedCategory(firstNonEmpty);
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar mídias:', error);
@@ -126,7 +132,7 @@ const DJMediaGallery = ({ djId }) => {
   const categoriesWithCounts = categories.map(cat => ({
     ...cat,
     count: mediaFiles[cat.id]?.length || 0
-  }));
+  })).filter(cat => cat.count > 0);
 
   if (loading) {
     return (
@@ -258,4 +264,3 @@ const DJMediaGallery = ({ djId }) => {
 };
 
 export default DJMediaGallery;
-

@@ -20,14 +20,20 @@ const TopBar = ({ onMenuClick }) => {
     window.location.href = '/login';
   };
 
+  // Prefer company avatar if set in localStorage (admin)
+  let companyAvatar = null;
+  try { companyAvatar = typeof window !== 'undefined' ? localStorage.getItem('company_avatar_url') : null; } catch (e) { companyAvatar = null; }
+
+  const displayedAvatar = companyAvatar || userProfile?.avatar_url || userProfile?.profile_image_url;
+
   return (
     <header className="h-16 glass-card border-b border-white/10 flex items-center justify-between px-4 md:px-6">
       <div className="flex items-center space-x-4">
         {/* Avatar / Inicial */}
         <button className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center hover:from-purple-600 hover:to-pink-600 transition-all duration-200 hover:scale-105 cursor-pointer overflow-hidden">
-          {userProfile?.avatar_url || userProfile?.profile_image_url ? (
+          {displayedAvatar ? (
             <img
-              src={userProfile?.avatar_url || userProfile?.profile_image_url}
+              src={displayedAvatar}
               alt="Profile"
               className="w-full h-full rounded-full object-cover"
             />

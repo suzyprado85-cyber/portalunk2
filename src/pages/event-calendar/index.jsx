@@ -28,7 +28,6 @@ const EventCalendar = () => {
   const [userRole] = useState('admin'); // This would come from auth context
   const [filters, setFilters] = useState({
     search: '',
-    eventType: '',
     status: '',
     producer: '',
     dj: ''
@@ -49,7 +48,6 @@ const EventCalendar = () => {
       venue: ev?.location,
       city: ev?.city,
       description: ev?.description,
-      eventType: ev?.type || ev?.event_type || '',
       producerId: ev?.producer?.id,
       producer: ev?.producer?.name || ev?.producer?.company_name,
       djIds: ev?.dj ? [ev?.dj?.id] : [],
@@ -91,16 +89,13 @@ const EventCalendar = () => {
     if (filters?.search && !event?.title?.toLowerCase()?.includes(filters?.search?.toLowerCase())) {
       return false;
     }
-    if (filters?.eventType && event?.eventType !== filters?.eventType) {
-      return false;
-    }
     if (filters?.status && event?.status !== filters?.status) {
       return false;
     }
-    if (filters?.producer && event?.producerId !== filters?.producer) {
+    if (filters?.producer && String(event?.producerId) !== String(filters?.producer)) {
       return false;
     }
-    if (filters?.dj && !event?.djIds?.includes(filters?.dj)) {
+    if (filters?.dj && !((event?.djIds || []).map(id => String(id)).includes(String(filters?.dj)))) {
       return false;
     }
     return true;
@@ -167,15 +162,19 @@ const EventCalendar = () => {
 
   const handleDeleteEvent = async (eventId) => {
     try {
-      // Marca o evento como cancelado ao invés de excluir
-      await eventService?.update(eventId, { status: 'cancelled' });
+      if (!window.confirm('Deseja excluir este evento permanentemente? Essa ação não pode ser desfeita.')) return;
+
+      // Deleta evento do backend
+      const res = await eventService?.delete(eventId);
+      if (res?.error) throw new Error(res.error);
+
       await refetchEvents();
       setIsEventModalOpen(false);
       // Mostra mensagem de sucesso
-      alert('Evento cancelado com sucesso!');
+      alert('Evento excluído com sucesso!');
     } catch (e) {
-      console.error('Erro ao cancelar evento:', e);
-      alert('Erro ao cancelar evento');
+      console.error('Erro ao excluir evento:', e);
+      alert('Erro ao excluir evento');
     }
   };
 

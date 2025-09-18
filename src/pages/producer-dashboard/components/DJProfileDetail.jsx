@@ -475,5 +475,3 @@ const DJProfileDetail = ({ dj, onBack }) => {
 };
 
 export default DJProfileDetail;
-
-

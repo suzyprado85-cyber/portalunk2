@@ -80,14 +80,22 @@ export const usePendingPayments = (filters = {}) => {
     filters?.search
   ]);
 
-  // Calculate overdue payments (payments older than 30 days)
+  // Calculate overdue payments: either older than 30 days OR event date passed for confirmed events without payment
   const overduePayments = useMemo(() => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     return filteredPayments.filter(payment => {
       const paymentDate = new Date(payment?.created_at);
-      return paymentDate < thirtyDaysAgo;
+
+      // Over 30 days since creation
+      if (paymentDate < thirtyDaysAgo) return true;
+
+      // Or event date passed and payment still pending
+      const eventDate = payment?.event?.event_date ? new Date(payment.event.event_date) : null;
+      if (eventDate && new Date() > eventDate && payment?.status === 'pending') return true;
+
+      return false;
     });
   }, [filteredPayments]);
 
@@ -151,7 +159,7 @@ export const usePendingPayments = (filters = {}) => {
     };
   }, [filteredPayments, overduePayments]);
 
-  // Upload payment proof
+  // Upload payment proof (producer can upload comprovante and mark as paid)
   const uploadPaymentProof = useCallback(async (paymentId, file, description = '') => {
     if (!paymentId || !file) {
       toast.error('ID do pagamento e arquivo são obrigatórios');
@@ -167,8 +175,8 @@ export const usePendingPayments = (filters = {}) => {
 
       // Upload to Supabase Storage
       const { data: uploadData, error: uploadError } = await storageService.uploadFile(
-        'payment-proofs', 
-        filePath, 
+        'payment-proofs',
+        filePath,
         file
       );
 
@@ -176,18 +184,22 @@ export const usePendingPayments = (filters = {}) => {
         throw new Error(uploadError);
       }
 
-      // Update payment with proof URL
-      const result = await paymentService.updateWithProof(paymentId, uploadData.publicUrl);
-      
-      if (result?.error) {
-        throw new Error(result.error);
+      // Confirm payment and attach proof (producer action)
+      const confirmResult = await paymentService.confirmPayment(paymentId, {
+        payment_method: 'transferencia',
+        paid_at: new Date().toISOString(),
+        proofUrl: uploadData.publicUrl
+      });
+
+      if (confirmResult?.error) {
+        throw new Error(confirmResult.error);
       }
 
       // Refresh payments data
       await refetchPayments();
-      
-      toast.success('Comprovante enviado com sucesso!');
-      return { data: result.data };
+
+      toast.success('Comprovante enviado e pagamento marcado como pago!');
+      return { data: confirmResult.data };
     } catch (error) {
       console.error('Erro ao enviar comprovante:', error);
       toast.error('Erro ao enviar comprovante: ' + error.message);
@@ -225,6 +237,46 @@ export const usePendingPayments = (filters = {}) => {
   }, [refetchPayments]);
 
   // Bulk operations
+  const confirmPayments = useCallback(async (paymentIds, { payment_method, paid_at, file }) => {
+    if (!paymentIds || paymentIds.length === 0) {
+      toast.error('Selecione pelo menos um pagamento');
+      return { error: 'Nenhum pagamento selecionado' };
+    }
+
+    setLoading(true);
+    try {
+      // Upload proof once per payment
+      const results = [];
+      for (const id of paymentIds) {
+        let proofUrl = null;
+        if (file) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `payment_${id}_${Date.now()}.${fileExt}`;
+          const filePath = `payment-proofs/${fileName}`;
+          const { data: uploadData, error: uploadError } = await storageService.uploadFile('payment-proofs', filePath, file);
+          if (uploadError) throw new Error(uploadError);
+          proofUrl = uploadData.publicUrl;
+        }
+        const res = await paymentService.confirmPayment(id, { payment_method, paid_at, proofUrl });
+        results.push(res);
+      }
+
+      const errors = results.filter(r => r?.error);
+      const successes = results.filter(r => !r?.error);
+      if (errors.length > 0) toast.error(`${errors.length} pagamentos falharam ao confirmar`);
+      if (successes.length > 0) toast.success(`${successes.length} pagamentos confirmados como pagos!`);
+
+      await refetchPayments();
+      return { data: { successes: successes.length, errors: errors.length } };
+    } catch (error) {
+      console.error('Erro ao confirmar pagamentos:', error);
+      toast.error('Erro ao confirmar pagamentos');
+      return { error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  }, [refetchPayments]);
+
   const bulkMarkAsPaid = useCallback(async (paymentIds) => {
     if (!paymentIds || paymentIds.length === 0) {
       toast.error('Selecione pelo menos um pagamento');
@@ -364,6 +416,25 @@ export const usePendingPayments = (filters = {}) => {
     };
   }, [refetchPayments]);
 
+  const deletePayment = useCallback(async (paymentId) => {
+    if (!paymentId) return { error: 'ID inválido' };
+    if (!window.confirm('Confirma a exclusão desta transação?')) return { cancelled: true };
+    setLoading(true);
+    try {
+      const result = await paymentService.delete(paymentId);
+      if (result?.error) throw new Error(result.error);
+      await refetchPayments();
+      toast.success('Transação excluída com sucesso');
+      return { data: result.data };
+    } catch (error) {
+      console.error('Erro ao excluir transação:', error);
+      toast.error('Erro ao excluir transação');
+      return { error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  }, [refetchPayments]);
+
   return {
     // Data
     payments: filteredPayments,
@@ -378,7 +449,9 @@ export const usePendingPayments = (filters = {}) => {
     // Actions
     uploadPaymentProof,
     markAsPaid,
+    confirmPayments,
     bulkMarkAsPaid,
+    deletePayment,
     refetchPayments,
     
     // Filters and queries

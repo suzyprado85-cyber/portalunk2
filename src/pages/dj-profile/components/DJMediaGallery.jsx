@@ -85,6 +85,17 @@ const DJMediaGallery = ({ djId, djName, dj = null, isAdmin = false, onMediaUpdat
       });
 
       setMediaFiles(grouped);
+
+      // If not admin, ensure selectedCategory points to a category with items
+      if (!isAdmin) {
+        const firstNonEmpty = Object.keys(grouped).find(k => (grouped[k] || []).length > 0);
+        if (firstNonEmpty) {
+          setSelectedCategory(prev => {
+            if ((grouped[prev] || []).length === 0) return firstNonEmpty;
+            return prev;
+          });
+        }
+      }
     } catch (error) {
       console.error('Erro ao carregar mídias:', error);
       toast.error('Erro ao carregar mídias do DJ');
@@ -171,7 +182,7 @@ const DJMediaGallery = ({ djId, djName, dj = null, isAdmin = false, onMediaUpdat
   const categoriesWithCounts = categories.map(cat => ({
     ...cat,
     count: mediaFiles[cat.id]?.length || 0
-  }));
+  })).filter(cat => (isAdmin ? true : cat.count > 0));
 
   if (loading) {
     return (
@@ -335,54 +346,6 @@ const DJMediaGallery = ({ djId, djName, dj = null, isAdmin = false, onMediaUpdat
         )}
       </div>
 
-      {/* Social Media Links */}
-      <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50">
-        <h3 className="text-2xl font-bold mb-6 text-white">Redes Sociais</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {dj?.instagram && (
-            <a 
-              href={getSocialLink('instagram', dj.instagram)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center p-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-xl hover:from-purple-600/30 hover:to-pink-600/30 transition-all"
-            >
-              <Icon name="Instagram" size={24} className="text-pink-400 mr-3" />
-              <div>
-                <p className="text-white font-medium">Instagram</p>
-                <p className="text-gray-400 text-sm">{dj.instagram}</p>
-              </div>
-            </a>
-          )}
-          {dj?.soundcloud && (
-            <a 
-              href={getSocialLink('soundcloud', dj.soundcloud)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center p-4 bg-gradient-to-r from-orange-600/20 to-red-600/20 border border-orange-500/30 rounded-xl hover:from-orange-600/30 hover:to-red-600/30 transition-all"
-            >
-              <Icon name="Music" size={24} className="text-orange-400 mr-3" />
-              <div>
-                <p className="text-white font-medium">SoundCloud</p>
-                <p className="text-gray-400 text-sm">Ouça as músicas</p>
-              </div>
-            </a>
-          )}
-          {dj?.youtube && (
-            <a 
-              href={getSocialLink('youtube', dj.youtube)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center p-4 bg-gradient-to-r from-red-600/20 to-red-700/20 border border-red-500/30 rounded-xl hover:from-red-600/30 hover:to-red-700/30 transition-all"
-            >
-              <Icon name="Play" size={24} className="text-red-400 mr-3" />
-              <div>
-                <p className="text-white font-medium">YouTube</p>
-                <p className="text-gray-400 text-sm">Vídeos e sets</p>
-              </div>
-            </a>
-          )}
-        </div>
-      </div>
 
       {/* Add Media Modal */}
       {showAddModal && isAdmin && (

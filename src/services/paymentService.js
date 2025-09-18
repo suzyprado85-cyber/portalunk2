@@ -147,6 +147,36 @@ export const paymentService = {
     }
   },
 
+  // Confirmar pagamento com método, data e comprovante
+  async confirmPayment(paymentId, { payment_method, paid_at, proofUrl }) {
+    try {
+      const updates = {
+        status: 'paid',
+        payment_method: payment_method || null,
+        paid_at: paid_at || new Date().toISOString(),
+        payment_proof_url: proofUrl || null,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('payments')
+        .update(updates)
+        .eq('id', paymentId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao confirmar pagamento:', error);
+        return { error: (error && error.message) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error)) };
+      }
+
+      return { data };
+    } catch (error) {
+      console.error('Erro de conexão ao confirmar pagamento:', error);
+      return { error: 'Erro de conexão' };
+    }
+  },
+
   // Marcar pagamento como pago manualmente (admin)
   async markAsPaid(paymentId) {
     try {
@@ -260,6 +290,28 @@ export const paymentService = {
       return { data: metrics };
     } catch (error) {
       console.error('Erro de conexão ao buscar métricas financeiras:', error);
+      return { error: 'Erro de conexão' };
+    }
+  },
+
+  // Excluir pagamento
+  async delete(paymentId) {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .delete()
+        .eq('id', paymentId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao excluir pagamento:', error);
+        return { error: (error && error.message) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error)) };
+      }
+
+      return { data };
+    } catch (error) {
+      console.error('Erro de conexão ao excluir pagamento:', error);
       return { error: 'Erro de conexão' };
     }
   }

@@ -178,18 +178,64 @@ export const eventService = {
       let { data, error } = await attemptInsert(eventData);
 
       // If error indicates missing column(s), try to remove them and retry once
-      if (error && typeof error.message === 'string') {
-        const missingColMatch = error.message.match(/Could not find the '([^']+)' column/);
-        if (missingColMatch) {
-          const missingCol = missingColMatch[1];
+      if (error) {
+        const errMsg = toMessage(error);
+        // Try several common DB error patterns to extract a missing column name
+        const extractMissingColumn = (msg) => {
+          if (!msg) return null;
+          // Pattern: Could not find the 'type' column of 'events' in the schema cache
+          let m = msg.match(/Could not find the '([^']+)' column/i);
+          if (m) return m[1];
+          // Pattern: column "type" of relation "events" does not exist
+          m = msg.match(/column \"?([a-zA-Z0-9_]+)\"? of (relation|table) \"?[a-zA-Z0-9_]+\"? does not exist/i);
+          if (m) return m[1];
+          // Pattern: column "type" does not exist
+          m = msg.match(/column \"?([a-zA-Z0-9_]+)\"? does not exist/i);
+          if (m) return m[1];
+          return null;
+        };
+
+        const missingCol = extractMissingColumn(errMsg);
+        if (missingCol) {
           console.warn(`Coluna ausente detectada ao criar evento: ${missingCol}. Tentando novamente sem esse campo.`);
           const cleaned = { ...eventData };
           delete cleaned[missingCol];
           const retry = await attemptInsert(cleaned);
           if (retry.error) return handleError(retry.error, 'Erro ao criar evento');
-          return { data: retry.data };
+          data = retry.data;
+          error = retry.error;
+        } else {
+          return handleError(error, 'Erro ao criar evento');
         }
-        return handleError(error, 'Erro ao criar evento');
+      }
+
+      // After event creation, ensure payment record exists when appropriate
+      try {
+        const createdEvent = data;
+        const isConfirmed = createdEvent?.status === 'confirmed' || eventData?.status === 'confirmed';
+        const cacheValue = createdEvent?.cache_value ?? eventData?.cache_value ?? null;
+        // In DB schema cache_value is NOT NULL; a value of 0.00 means isento (no payment expected)
+        const cacheIsExempt = cacheValue != null ? (parseFloat(cacheValue) === 0) : false;
+
+        if (isConfirmed && cacheValue != null && !cacheIsExempt && parseFloat(cacheValue) > 0) {
+          const commissionPct = (createdEvent?.commission_percentage != null) ? parseFloat(createdEvent.commission_percentage) : (eventData?.commission_percentage != null ? parseFloat(eventData.commission_percentage) : 10);
+          const commissionAmount = (parseFloat(cacheValue) * (commissionPct / 100));
+
+          // Create pending payment linked to event, producer and DJ
+          await supabase?.from('payments')?.insert({
+            event_id: createdEvent.id,
+            amount: parseFloat(cacheValue),
+            status: 'pending',
+            commission_percentage: commissionPct,
+            commission_amount: commissionAmount,
+            dj_id: createdEvent?.dj?.id || eventData?.dj_id || null,
+            producer_id: createdEvent?.producer?.id || eventData?.producer_id || null,
+            created_at: new Date().toISOString()
+          });
+        }
+      } catch (paymentErr) {
+        // Do not break event creation if payment creation fails; surface a warning
+        console.warn('Falha ao criar registro de pagamento vinculado ao evento:', paymentErr);
       }
 
       return { data };
@@ -214,23 +260,103 @@ export const eventService = {
       let { data, error } = await attemptUpdate(updates);
 
       // If error indicates missing column(s), try to remove them and retry once
-      if (error && typeof error.message === 'string') {
-        const missingColMatch = error.message.match(/Could not find the '([^']+)' column/);
-        if (missingColMatch) {
-          const missingCol = missingColMatch[1];
+      if (error) {
+        const errMsg = toMessage(error);
+        const extractMissingColumn = (msg) => {
+          if (!msg) return null;
+          let m = msg.match(/Could not find the '([^']+)' column/i);
+          if (m) return m[1];
+          m = msg.match(/column \"?([a-zA-Z0-9_]+)\"? of (relation|table) \"?[a-zA-Z0-9_]+\"? does not exist/i);
+          if (m) return m[1];
+          m = msg.match(/column \"?([a-zA-Z0-9_]+)\"? does not exist/i);
+          if (m) return m[1];
+          return null;
+        };
+
+        const missingCol = extractMissingColumn(errMsg);
+        if (missingCol) {
           console.warn(`Coluna ausente detectada ao atualizar evento: ${missingCol}. Tentando novamente sem esse campo.`);
           const cleaned = { ...updates };
           delete cleaned[missingCol];
           const retry = await attemptUpdate(cleaned);
           if (retry.error) return handleError(retry.error, 'Erro ao atualizar evento');
-          return { data: retry.data };
+          data = retry.data;
+          error = retry.error;
+        } else {
+          return handleError(error, 'Erro ao atualizar evento');
         }
-        return handleError(error, 'Erro ao atualizar evento');
+      }
+
+      // After update, ensure payment record reflects event state
+      try {
+        const updatedEvent = data;
+        const isConfirmed = updatedEvent?.status === 'confirmed' || updates?.status === 'confirmed';
+        const cacheValue = updatedEvent?.cache_value ?? updates?.cache_value ?? null;
+        // Interpret cache_value === 0 as isento
+        const cacheIsExempt = cacheValue != null ? (parseFloat(cacheValue) === 0) : false;
+
+        // Fetch existing payment linked to event (if any)
+        const { data: existingPayments } = await supabase?.from('payments')?.select('*')?.eq('event_id', id)?.limit(1);
+        const existing = (existingPayments && existingPayments.length > 0) ? existingPayments[0] : null;
+
+        if (isConfirmed && cacheValue != null && !cacheIsExempt && parseFloat(cacheValue) > 0) {
+          const commissionPct = (updatedEvent?.commission_percentage != null) ? parseFloat(updatedEvent.commission_percentage) : (updates?.commission_percentage != null ? parseFloat(updates.commission_percentage) : 10);
+          const commissionAmount = (parseFloat(cacheValue) * (commissionPct / 100));
+
+          if (!existing) {
+            // Create new pending payment
+            await supabase?.from('payments')?.insert({
+              event_id: id,
+              amount: parseFloat(cacheValue),
+              status: 'pending',
+              commission_percentage: commissionPct,
+              commission_amount: commissionAmount,
+              dj_id: updatedEvent?.dj?.id || updates?.dj_id || null,
+              producer_id: updatedEvent?.producer?.id || updates?.producer_id || null,
+              created_at: new Date().toISOString()
+            });
+          } else {
+            // If payment exists and is not paid, update amounts/commission
+            if (existing.status !== 'paid') {
+              await supabase?.from('payments')?.update({
+                amount: parseFloat(cacheValue),
+                commission_percentage: commissionPct,
+                commission_amount: commissionAmount,
+                updated_at: new Date().toISOString()
+              })?.eq('id', existing.id);
+            }
+          }
+        } else {
+          // If event is not confirmed or cache is isento, remove pending payment if exists
+          if (existing && existing.status !== 'paid') {
+            await supabase?.from('payments')?.delete()?.eq('id', existing.id);
+          }
+        }
+      } catch (paymentErr) {
+        console.warn('Falha ao sincronizar pagamento após atualização do evento:', paymentErr);
       }
 
       return { data };
     } catch (error) {
       return handleError(error, 'Erro de conexão ao atualizar evento');
+    }
+  },
+
+  // Delete event permanently
+  async delete(id) {
+    try {
+      // Delete payments associated with the event first (if any)
+      try {
+        await supabase?.from('payments')?.delete()?.eq('event_id', id);
+      } catch (e) {
+        console.warn('Falha ao deletar pagamentos associados ao evento:', e);
+      }
+
+      const { data, error } = await supabase?.from('events')?.delete()?.eq('id', id)?.select();
+      if (error) return handleError(error, 'Erro ao deletar evento');
+      return { data };
+    } catch (error) {
+      return handleError(error, 'Erro de conexão ao deletar evento');
     }
   }
 };
@@ -336,18 +462,47 @@ export const storageService = {
   // Upload file to storage
   async uploadFile(bucket, path, file) {
     try {
-      const { data, error } = await supabase?.storage?.from(bucket)?.upload(path, file, {
+      const attemptUpload = async () => {
+        const { data, error } = await supabase?.storage?.from(bucket)?.upload(path, file, {
           cacheControl: '3600',
           upsert: true
         });
-      
+        return { data, error };
+      };
+
+      // First attempt
+      let { data, error } = await attemptUpload();
+
+      // If bucket not found, try to create it (best-effort). Creating a bucket may require elevated permissions; if it fails, return informative error.
+      if (error && typeof error.message === 'string' && /bucket not found/i.test(error.message)) {
+        try {
+          // Best-effort create bucket. This will likely fail on client-side if using anon key, but we try to give an automated fix when possible.
+          const { data: created, error: createErr } = await supabase?.storage?.createBucket(bucket, { public: true });
+          if (createErr) {
+            // Surface a clear error to the caller
+            return handleError(createErr, `Bucket "${bucket}" não encontrado e criação automática falhou. Crie o bucket manualmente no painel do Supabase.`);
+          }
+
+          // Retry upload after creating bucket
+          const retry = await attemptUpload();
+          data = retry.data;
+          error = retry.error;
+        } catch (createException) {
+          return handleError(createException, `Erro ao tentar criar o bucket "${bucket}"`);
+        }
+      }
+
       if (error) return handleError(error, 'Erro ao fazer upload do arquivo');
-      
+
       // Get public URL
       const { data: { publicUrl } } = supabase?.storage?.from(bucket)?.getPublicUrl(data?.path);
-      
+
       return { data: { ...data, publicUrl } };
     } catch (error) {
+      // If the error contains a bucket not found message, return a friendlier instruction
+      if (error && error.message && /bucket not found/i.test(error.message)) {
+        return handleError(error, `Bucket "${bucket}" não encontrado. Por favor crie o bucket no painel do Supabase ou verifique as permissões.`);
+      }
       return handleError(error, 'Erro de conexão ao fazer upload');
     }
   },

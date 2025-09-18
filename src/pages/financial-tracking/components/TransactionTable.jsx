@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import Button from '../../../components/ui/Button';
 
-const TransactionTable = ({ transactions, onViewDetails, onProcessPayment, onUploadReceipt }) => {
+const TransactionTable = ({ transactions, onViewDetails, onProcessPayment, onDeleteTransaction }) => {
   const [selectedTransactions, setSelectedTransactions] = useState([]);
 
   const handleSelectAll = (checked) => {
@@ -79,15 +79,6 @@ const TransactionTable = ({ transactions, onViewDetails, onProcessPayment, onUpl
                 onClick={() => onProcessPayment(selectedTransactions)}
               >
                 Confirmar Pagamentos
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                iconName="Upload"
-                iconPosition="left"
-                onClick={() => onUploadReceipt(selectedTransactions)}
-              >
-                Upload Comprovantes
               </Button>
             </div>
           )}
@@ -184,10 +175,29 @@ const TransactionTable = ({ transactions, onViewDetails, onProcessPayment, onUpl
                       <Button
                         variant="ghost"
                         size="sm"
-                        iconName="Upload"
-                        onClick={() => onUploadReceipt([transaction?.id])}
+                        iconName="Check"
+                        onClick={() => onProcessPayment([transaction?.id])}
+                        title="Confirmar Pagamento"
                       />
                     )}
+                    {transaction?.status === 'paid' && transaction?.paymentProofUrl && (
+                      <a href={transaction?.paymentProofUrl} target="_blank" rel="noopener noreferrer">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          iconName="ExternalLink"
+                          title="Visualizar Comprovante"
+                        />
+                      </a>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      iconName="Trash2"
+                      className="text-error hover:text-error"
+                      onClick={() => onDeleteTransaction(transaction?.id)}
+                      title="Excluir Transação"
+                    />
                   </div>
                 </td>
               </tr>
@@ -241,10 +251,29 @@ const TransactionTable = ({ transactions, onViewDetails, onProcessPayment, onUpl
                   <Button
                     variant="ghost"
                     size="sm"
-                    iconName="Upload"
-                    onClick={() => onUploadReceipt([transaction?.id])}
+                    iconName="Check"
+                    onClick={() => onProcessPayment([transaction?.id])}
+                    title="Confirmar Pagamento"
                   />
                 )}
+                {transaction?.status === 'paid' && transaction?.paymentProofUrl && (
+                  <a href={transaction?.paymentProofUrl} target="_blank" rel="noopener noreferrer">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      iconName="ExternalLink"
+                      title="Visualizar Comprovante"
+                    />
+                  </a>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  iconName="Trash2"
+                  className="text-error hover:text-error"
+                  onClick={() => onDeleteTransaction(transaction?.id)}
+                  title="Excluir Transação"
+                />
               </div>
             </div>
           </div>
