@@ -28,7 +28,7 @@ export const mediaService = {
       // Upload do arquivo
       const { data: storageData, error: uploadError } = await supabase.storage
         .from(bucketName)
-        .upload(fileName, file);
+        .upload(fileName, file, { upsert: true, cacheControl: '3600', contentType: file?.type || undefined });
 
       if (uploadError) {
         console.error('❌ Erro no upload:', uploadError);
@@ -106,7 +106,7 @@ export const mediaService = {
             const extFromType = contentType.includes('/') ? contentType.split('/')[1].split(';')[0] : 'bin';
             const djFolder = (djName || 'dj').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
             const fileName = `${djFolder}/backdrop/${Date.now()}-${Math.random().toString(36).substring(2)}.${extFromType}`;
-            const { data: uploadDataRes, error: uploadErr } = await supabase.storage.from('dj-media').upload(fileName, blob);
+            const { data: uploadDataRes, error: uploadErr } = await supabase.storage.from('dj-media').upload(fileName, blob, { upsert: true, cacheControl: '3600', contentType: contentType || blob.type || undefined });
             if (!uploadErr) {
               const { data: urlData } = supabase.storage.from('dj-media').getPublicUrl(fileName);
               const mediaDataStored = {
