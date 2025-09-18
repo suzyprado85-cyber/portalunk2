@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
@@ -258,4 +259,3 @@ const DJMediaGallery = ({ djId }) => {
 };
 
 export default DJMediaGallery;
-
