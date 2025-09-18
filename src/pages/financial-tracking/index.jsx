@@ -11,7 +11,6 @@ import PaymentUploadModal from './components/PaymentUploadModal';
 import TransactionDetailsModal from './components/TransactionDetailsModal';
 import TopBar from '../../components/ui/TopBar';
 import AdminBackground from '../../components/AdminBackground';
-import { useSupabaseData } from '../../hooks/useSupabaseData';
 import { useFinancialStats, usePendingPayments } from '../../hooks/usePendingPayments';
 
 const FinancialTracking = () => {
