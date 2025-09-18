@@ -18,15 +18,16 @@ const EventModal = ({
   const [formData, setFormData] = useState({
     title: '',
     date: '',
-    time: '',
     venue: '',
+    city: '',
     description: '',
     eventType: '',
     producerId: '',
     djIds: [],
     status: 'pending',
-    budget: '',
-    expectedAttendance: '',
+    cache: '',
+    advancePaid: false,
+    advancePercentage: '',
     requirements: ''
   });
 
@@ -38,23 +39,23 @@ const EventModal = ({
       setFormData({
         title: event?.title || '',
         date: event?.date || '',
-        time: event?.time || '',
         venue: event?.venue || '',
+        city: event?.city || '',
         description: event?.description || '',
         eventType: event?.eventType || '',
         producerId: event?.producerId || '',
         djIds: event?.djIds || [],
         status: event?.status || 'pending',
-        budget: event?.budget || '',
-        expectedAttendance: event?.expectedAttendance || '',
+        cache: event?.budget || '',
+        advancePaid: false,
+        advancePercentage: '',
         requirements: event?.requirements || ''
       });
     } else if (selectedDate) {
       const dateStr = selectedDate?.toISOString()?.split('T')?.[0];
       setFormData(prev => ({
         ...prev,
-        date: dateStr,
-        time: '20:00'
+        date: dateStr
       }));
     }
   }, [event, selectedDate]);
@@ -76,7 +77,7 @@ const EventModal = ({
 
   const producerOptions = producers?.map(producer => ({
     value: producer?.id,
-    label: producer?.name
+    label: producer?.name || producer?.company_name || producer?.email
   }));
 
   const djOptions = djs?.map(dj => ({
@@ -111,21 +112,13 @@ const EventModal = ({
   const validateForm = () => {
     const newErrors = {};
 
-    // Apenas título e data são obrigatórios
-    if (!formData?.title?.trim()) {
-      newErrors.title = 'Título é obrigatório';
-    }
-
-    if (!formData?.date) {
-      newErrors.date = 'Data é obrigatória';
-    }
-
-    // Removido validações obrigatórias para:
-    // - time (horário)
-    // - venue (local)
-    // - eventType (tipo de evento)
-    // - producerId (produtor)
-    // - djIds (DJs)
+    if (!formData?.title?.trim()) newErrors.title = 'Título é obrigatório';
+    if (!formData?.date) newErrors.date = 'Data é obrigatória';
+    if (!formData?.venue?.trim()) newErrors.venue = 'Local é obrigatório';
+    if (!formData?.city?.trim()) newErrors.city = 'Cidade é obrigatória';
+    if (!formData?.producerId) newErrors.producerId = 'Produtor é obrigatório';
+    if (!Array.isArray(formData?.djIds) || formData?.djIds.length === 0) newErrors.djIds = 'Selecione pelo menos um DJ';
+    if (!formData?.cache || isNaN(parseFloat(formData?.cache))) newErrors.cache = 'Cachê é obrigatório';
 
     setErrors(newErrors);
     return Object.keys(newErrors)?.length === 0;
@@ -133,22 +126,32 @@ const EventModal = ({
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
-      const eventData = {
-        ...formData,
-        id: event?.id || `event_${Date.now()}`,
-        createdAt: event?.createdAt || new Date()?.toISOString(),
-        updatedAt: new Date()?.toISOString()
+      const requirementsNote = formData?.advancePaid
+        ? `Pagamento de cachê antecipado: ${formData?.advancePercentage || 0}%\n` : '';
+
+      const payload = {
+        title: formData?.title,
+        event_date: formData?.date,
+        location: formData?.venue,
+        city: formData?.city,
+        description: formData?.description,
+        type: formData?.eventType || null,
+        producer_id: formData?.producerId,
+        dj_id: Array.isArray(formData?.djIds) && formData?.djIds?.length > 0 ? formData?.djIds[0] : null,
+        status: formData?.status,
+        cache_value: formData?.cache ? parseFloat(formData?.cache) : null,
+        requirements: `${requirementsNote}${formData?.requirements || ''}`.trim()
       };
 
-      await onSave(eventData);
+      await onSave(payload);
       onClose();
     } catch (error) {
       console.error('Erro ao salvar evento:', error);
@@ -219,13 +222,6 @@ const EventModal = ({
                 error={errors?.date}
               />
 
-              <Input
-                label="Horário"
-                type="time"
-                value={formData?.time}
-                onChange={(e) => handleInputChange('time', e?.target?.value)}
-                error={errors?.time}
-              />
 
               <Input
                 label="Local"
@@ -234,7 +230,15 @@ const EventModal = ({
                 onChange={(e) => handleInputChange('venue', e?.target?.value)}
                 error={errors?.venue}
                 placeholder="Nome do local"
-                className="md:col-span-2"
+              />
+
+              <Input
+                label="Cidade"
+                type="text"
+                value={formData?.city}
+                onChange={(e) => handleInputChange('city', e?.target?.value)}
+                error={errors?.city}
+                placeholder="Cidade"
               />
             </div>
 
@@ -298,23 +302,40 @@ const EventModal = ({
               </div>
             </div>
 
-            {/* Additional Details */}
+            {/* Cachê e Pagamento Antecipado */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Orçamento (R$)"
+                label="Cachê (R$)"
                 type="number"
-                value={formData?.budget}
-                onChange={(e) => handleInputChange('budget', e?.target?.value)}
+                value={formData?.cache}
+                onChange={(e) => handleInputChange('cache', e?.target?.value)}
                 placeholder="0,00"
+                error={errors?.cache}
               />
 
-              <Input
-                label="Público Esperado"
-                type="number"
-                value={formData?.expectedAttendance}
-                onChange={(e) => handleInputChange('expectedAttendance', e?.target?.value)}
-                placeholder="Número de pessoas"
-              />
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-foreground">Pagamento de cachê antecipado?</label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    id="advancePaid"
+                    type="checkbox"
+                    checked={!!formData?.advancePaid}
+                    onChange={(e) => handleInputChange('advancePaid', e.target.checked)}
+                  />
+                  <label htmlFor="advancePaid" className="text-sm text-foreground">Sim</label>
+                </div>
+                {formData?.advancePaid && (
+                  <Input
+                    label="Porcentagem adiantada (%)"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={formData?.advancePercentage}
+                    onChange={(e) => handleInputChange('advancePercentage', e?.target?.value)}
+                    placeholder="Ex: 50"
+                  />
+                )}
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -333,12 +354,12 @@ const EventModal = ({
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Requisitos Especiais
+                  Observações / Requisitos
                 </label>
                 <textarea
                   value={formData?.requirements}
                   onChange={(e) => handleInputChange('requirements', e?.target?.value)}
-                  placeholder="Equipamentos, rider técnico, etc..."
+                  placeholder="Observações, requisitos, e detalhes de pagamento antecipado"
                   rows={3}
                   className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />

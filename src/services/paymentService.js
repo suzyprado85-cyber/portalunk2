@@ -15,7 +15,7 @@ export const paymentService = {
             location,
             cache_value,
             commission_percentage,
-            dj:djs(id, name, email),
+            dj:djs(id, name),
             producer:profiles(id, name, company_name, email)
           )
         `)
@@ -23,7 +23,7 @@ export const paymentService = {
       
       if (error) {
         console.error('Erro ao buscar pagamentos:', error);
-        return { error: error.message };
+        return { error: (error && error.message) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error)) };
       }
       
       return { data: data || [] };
@@ -47,7 +47,7 @@ export const paymentService = {
             location,
             cache_value,
             producer_id,
-            dj:djs(id, name, email)
+            dj:djs(id, name)
           )
         `)
         .eq('event.producer_id', producerId)
@@ -55,7 +55,7 @@ export const paymentService = {
       
       if (error) {
         console.error('Erro ao buscar pagamentos do produtor:', error);
-        return { error: error.message };
+        return { error: (error && error.message) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error)) };
       }
       
       return { data: data || [] };
@@ -87,7 +87,7 @@ export const paymentService = {
       
       if (error) {
         console.error('Erro ao buscar pagamentos do DJ:', error);
-        return { error: error.message };
+        return { error: (error && error.message) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error)) };
       }
       
       return { data: data || [] };
@@ -121,7 +121,7 @@ export const paymentService = {
       
       if (error) {
         console.error('Erro ao atualizar pagamento:', error);
-        return { error: error.message };
+        return { error: (error && error.message) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error)) };
       }
 
       // 2. Chamar edge function para verificação automática
@@ -163,7 +163,7 @@ export const paymentService = {
       
       if (error) {
         console.error('Erro ao marcar pagamento como pago:', error);
-        return { error: error.message };
+        return { error: (error && error.message) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error)) };
       }
       
       return { data };
@@ -196,7 +196,7 @@ export const paymentService = {
       
       if (error) {
         console.error('Erro ao buscar pagamentos pendentes do DJ:', error);
-        return { error: error.message };
+        return { error: (error && error.message) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error)) };
       }
       
       return { data: data || [] };
@@ -229,7 +229,7 @@ export const paymentService = {
       
       if (error) {
         console.error('Erro ao buscar métricas financeiras:', error);
-        return { error: error.message };
+        return { error: (error && error.message) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error)) };
       }
 
       const payments = data || [];

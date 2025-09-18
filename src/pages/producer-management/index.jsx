@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import TopBar from '../../components/ui/TopBar';
 import RoleSidebar from '../../components/ui/RoleSidebar';
 import AdminBackground from '../../components/AdminBackground';
@@ -7,6 +7,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useSupabaseData } from '../../hooks/useSupabaseData';
 import { producerService, djService } from '../../services/supabaseService';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
 const ProducerCard = ({ producer, onView, onEdit, onChangePassword, onSelectDJ }) => {
@@ -74,6 +75,62 @@ const ProducerManagement = () => {
 
   const [search, setSearch] = useState('');
   const [isSidebarHover, setIsSidebarHover] = useState(false);
+
+  // Edit form state
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company_name: '',
+    company_document: '',
+    address: '',
+    city: '',
+    state: '',
+    contact_person: '',
+    is_active: true,
+    avatar_url: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState(null);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (editData) {
+      setFormData({
+        name: editData?.name || '',
+        email: editData?.email || '',
+        phone: editData?.phone || '',
+        company_name: editData?.company_name || '',
+        company_document: editData?.company_document || '',
+        address: editData?.address || '',
+        city: editData?.city || '',
+        state: editData?.state || '',
+        contact_person: editData?.contact_person || '',
+        is_active: editData?.is_active ?? true,
+        avatar_url: editData?.avatar_url || editData?.profile_image_url || ''
+      });
+      setSelectedAvatar(null);
+      setNewPassword('');
+      setShowPassword(false);
+    }
+  }, [editData]);
+
+  const handleAvatarSelect = (e) => {
+    const file = e?.target?.files?.[0];
+    if (!file) return;
+    if (!file.type?.startsWith('image/')) {
+      alert('Por favor, selecione apenas arquivos de imagem');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('A imagem deve ter no máximo 5MB');
+      return;
+    }
+    setSelectedAvatar(file);
+  };
+
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return producers || [];
@@ -96,13 +153,60 @@ const ProducerManagement = () => {
 
   const onSaveEdit = async () => {
     if (!editData) return;
-    const { id, ...updates } = editData;
-    const result = await producerService.update(id, updates);
-    if (result?.error) {
-      alert(result.error);
-    } else {
+    if (!formData?.name || !formData?.email) {
+      alert('Nome e email são obrigatórios');
+      return;
+    }
+
+    try {
+      // Upload avatar if selected
+      if (selectedAvatar) {
+        setUploadingAvatar(true);
+        try {
+          await producerService.uploadAvatar(editData.id, selectedAvatar);
+        } finally {
+          setUploadingAvatar(false);
+        }
+      }
+
+      // Update profile via Edge Function to also sync Auth email when changed
+      const updates = { ...formData };
+      const { data: updateRes, error: updateErr } = await supabase.functions.invoke('update-producer', {
+        body: { producerId: editData.id, updates }
+      });
+      if (updateErr || updateRes?.error) {
+        alert(updateErr?.message || updateRes?.error || 'Erro ao atualizar produtor');
+        return;
+      }
+
+      // Update password if provided
+      if (newPassword?.trim()) {
+        const { data: prof, error: profErr } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('id', editData.id)
+          .single();
+        if (profErr || !prof?.user_id) {
+          alert('Erro ao obter usuário para atualizar senha');
+          return;
+        }
+        const { data: pwRes, error: pwErr } = await supabase.functions.invoke('update-user-password', {
+          body: { userId: prof.user_id, newPassword }
+        });
+        if (pwErr || pwRes?.error) {
+          alert(pwErr?.message || pwRes?.error || 'Erro ao atualizar senha');
+          return;
+        }
+      }
+
+      alert(newPassword?.trim() ? 'Produtor atualizado e senha alterada com sucesso!' : 'Produtor atualizado com sucesso!');
       setEditData(null);
+      setSelectedAvatar(null);
+      setNewPassword('');
       refetchProducers();
+    } catch (e) {
+      console.error('Erro ao atualizar produtor:', e);
+      alert('Erro ao atualizar produtor');
     }
   };
 
@@ -216,25 +320,78 @@ const ProducerManagement = () => {
         {/* Edit Modal */}
         {editData && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className="bg-card border border-border rounded-lg w-full max-w-xl p-6">
+            <div className="bg-card border border-border rounded-lg w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-foreground">Editar Produtor</h2>
                 <Button variant="ghost" size="icon" onClick={() => setEditData(null)}><Icon name="X" size={18} /></Button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input value={editData?.name || ''} onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))} placeholder="Nome" />
-                <Input value={editData?.company_name || ''} onChange={(e) => setEditData(prev => ({ ...prev, company_name: e.target.value }))} placeholder="Empresa" />
-                <Input value={editData?.email || ''} onChange={(e) => setEditData(prev => ({ ...prev, email: e.target.value }))} placeholder="Email" />
-                <Input value={editData?.phone || ''} onChange={(e) => setEditData(prev => ({ ...prev, phone: e.target.value }))} placeholder="Telefone" />
-                <Input value={editData?.company_document || ''} onChange={(e) => setEditData(prev => ({ ...prev, company_document: e.target.value }))} placeholder="CNPJ" />
-                <Input value={editData?.city || ''} onChange={(e) => setEditData(prev => ({ ...prev, city: e.target.value }))} placeholder="Cidade" />
-                <Input value={editData?.state || ''} onChange={(e) => setEditData(prev => ({ ...prev, state: e.target.value }))} placeholder="Estado" />
-                <Input value={editData?.address || ''} onChange={(e) => setEditData(prev => ({ ...prev, address: e.target.value }))} placeholder="Endereço" />
-                <Input value={editData?.contact_person || ''} onChange={(e) => setEditData(prev => ({ ...prev, contact_person: e.target.value }))} placeholder="Pessoa de contato" />
+
+              {/* Avatar Section */}
+              <div className="flex flex-col items-center space-y-4 p-4 border border-border/60 rounded-lg mb-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-20 h-20 rounded-lg overflow-hidden border">
+                    {formData?.avatar_url || editData?.profile_image_url ? (
+                      <img src={formData?.avatar_url || editData?.profile_image_url} alt={formData?.name || 'Produtor'} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-xl font-semibold">
+                        {(formData?.name || 'P').charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm text-foreground">Foto do Perfil</div>
+                    <div className="flex items-center space-x-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploadingAvatar}>
+                        <Icon name="Upload" size={14} className="mr-2" />
+                        {selectedAvatar ? 'Trocar Foto' : 'Adicionar Foto'}
+                      </Button>
+                      {selectedAvatar && (
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setSelectedAvatar(null)}>
+                          <Icon name="X" size={14} />
+                        </Button>
+                      )}
+                    </div>
+                    {selectedAvatar && (
+                      <p className="text-sm text-muted-foreground">{selectedAvatar.name}</p>
+                    )}
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarSelect} className="hidden" />
+                  </div>
+                </div>
               </div>
-              <div className="mt-6 flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setEditData(null)}>Cancelar</Button>
-                <Button onClick={onSaveEdit}>Salvar</Button>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input value={formData?.name} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} placeholder="Nome *" />
+                <Input value={formData?.email} onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))} placeholder="Email *" type="email" />
+                <Input value={formData?.phone} onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))} placeholder="Telefone" />
+                <Input value={formData?.company_name} onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))} placeholder="Nome da Empresa" />
+                <Input value={formData?.company_document} onChange={(e) => setFormData(prev => ({ ...prev, company_document: e.target.value }))} placeholder="CNPJ" />
+                <Input value={formData?.contact_person} onChange={(e) => setFormData(prev => ({ ...prev, contact_person: e.target.value }))} placeholder="Pessoa de Contato" />
+                <Input value={formData?.city} onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))} placeholder="Cidade" />
+                <Input value={formData?.state} onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))} placeholder="Estado" />
+              </div>
+
+              <div className="mt-4">
+                <Input value={formData?.address} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} placeholder="Endereço" />
+              </div>
+
+              <div className="flex items-center space-x-2 mt-4">
+                <input id="is_active" type="checkbox" checked={!!formData?.is_active} onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))} />
+                <label htmlFor="is_active" className="text-sm text-foreground">Produtor ativo</label>
+              </div>
+
+              <div className="space-y-2 mt-4">
+                <div className="text-sm text-foreground">Nova Senha (opcional)</div>
+                <div className="relative">
+                  <Input id="new_password" type={showPassword ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Nova senha (deixe vazio para manter)" />
+                  <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={() => setShowPassword(!showPassword)}>
+                    <Icon name={showPassword ? 'EyeOff' : 'Eye'} size={16} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setEditData(null)}>Cancelar</Button>
+                <Button onClick={onSaveEdit} disabled={uploadingAvatar}>{uploadingAvatar ? 'Enviando foto...' : 'Salvar Alterações'}</Button>
               </div>
             </div>
           </div>

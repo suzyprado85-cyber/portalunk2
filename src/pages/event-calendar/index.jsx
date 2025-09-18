@@ -12,7 +12,7 @@ import QuickActions from './components/QuickActions';
 import Button from '../../components/ui/Button';
 import AdminBackground from '../../components/AdminBackground';
 import { useSupabaseData } from '../../hooks/useSupabaseData';
-import { eventService, djService } from '../../services/supabaseService';
+import { eventService, djService, producerService } from '../../services/supabaseService';
 
 
 const EventCalendar = () => {
@@ -37,6 +37,7 @@ const EventCalendar = () => {
   // Dados reais do Supabase
   const { data: rawEvents, loading: eventsLoading, refetch: refetchEvents } = useSupabaseData(eventService, 'getAll', [], []);
   const { data: allDJs } = useSupabaseData(djService, 'getAll', [], []);
+  const { data: allProducers } = useSupabaseData(producerService, 'getAll', [], []);
 
   // Normaliza eventos para o formato usado pelos componentes locais
   const events = useMemo(() => {
@@ -46,6 +47,7 @@ const EventCalendar = () => {
       date: ev?.event_date,
       time: ev?.start_time || null,
       venue: ev?.location,
+      city: ev?.city,
       description: ev?.description,
       eventType: ev?.type || ev?.event_type || '',
       producerId: ev?.producer?.id,
@@ -63,12 +65,11 @@ const EventCalendar = () => {
 
   // Listas para filtros
   const producersForFilter = useMemo(() => {
-    const map = new Map();
-    (rawEvents || []).forEach(ev => {
-      if (ev?.producer) map.set(ev.producer.id, { id: ev.producer.id, name: ev.producer.name || ev.producer.company_name });
-    });
-    return Array.from(map.values());
-  }, [rawEvents]);
+    return (allProducers || []).map(p => ({
+      id: p?.id,
+      name: p?.name || p?.company_name || p?.email
+    }));
+  }, [allProducers]);
 
   const djsForFilter = useMemo(() => {
     // Usa todos os DJs cadastrados, não apenas os que já estão em eventos
@@ -150,12 +151,12 @@ const EventCalendar = () => {
     }
   };
 
-  const handleSaveEvent = async (eventData) => {
+  const handleSaveEvent = async (payload) => {
     try {
       if (selectedEvent?.id) {
-        await eventService?.update(selectedEvent?.id, eventData);
+        await eventService?.update(selectedEvent?.id, payload);
       } else {
-        await eventService?.create(eventData);
+        await eventService?.create(payload);
       }
       await refetchEvents();
       setIsEventModalOpen(false);

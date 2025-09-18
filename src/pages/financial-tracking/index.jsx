@@ -11,10 +11,7 @@ import PaymentUploadModal from './components/PaymentUploadModal';
 import TransactionDetailsModal from './components/TransactionDetailsModal';
 import TopBar from '../../components/ui/TopBar';
 import AdminBackground from '../../components/AdminBackground';
-import { useSupabaseData } from '../../hooks/useSupabaseData';
-import { eventService, djService } from '../../services/supabaseService';
 import { useFinancialStats, usePendingPayments } from '../../hooks/usePendingPayments';
-import ChartWidget from '../admin-dashboard/components/ChartWidget';
 
 const FinancialTracking = () => {
   const navigate = useNavigate();
@@ -28,9 +25,6 @@ const FinancialTracking = () => {
   const [selectedTransactionIds, setSelectedTransactionIds] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
 
-  // Dados reais do Supabase
-  const { data: events } = useSupabaseData(eventService, 'getAll', [], []);
-  const { data: djs } = useSupabaseData(djService, 'getAll', [], []);
   
   // Use the financial hooks
   const financialStats = useFinancialStats();
@@ -92,58 +86,8 @@ const FinancialTracking = () => {
 
   const summaryData = calculateSummaryData(filteredTransactions?.length > 0 ? filteredTransactions : transactions);
 
-  const revenueChartData = useMemo(() => {
-    const monthlyRevenue = {};
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthKey = date.toLocaleDateString('pt-BR', { month: 'short' });
-      monthlyRevenue[monthKey] = 0;
-    }
-    (payments || []).forEach(payment => {
-      if (payment?.status === 'paid' && payment?.paid_at) {
-        const paymentDate = new Date(payment.paid_at);
-        const monthKey = paymentDate.toLocaleDateString('pt-BR', { month: 'short' });
-        if (monthlyRevenue[monthKey] !== undefined) {
-          monthlyRevenue[monthKey] += parseFloat(payment.amount || 0);
-        }
-      }
-    });
-    return Object.entries(monthlyRevenue).map(([name, value]) => ({ name, value }));
-  }, [payments]);
 
-  const djDistributionData = useMemo(() => {
-    const genreCount = {};
-    (djs || []).forEach(dj => {
-      const genres = dj?.specialties || [dj?.genre] || ['Outros'];
-      genres.forEach(genre => { if (genre) genreCount[genre] = (genreCount[genre] || 0) + 1; });
-    });
-    return Object.entries(genreCount)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-  }, [djs]);
 
-  const eventTrendData = useMemo(() => {
-    const weeklyEvents = {};
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const weekStart = new Date(now.getTime() - (i * 7 * 24 * 60 * 60 * 1000));
-      const weekKey = `Sem ${6 - i}`;
-      weeklyEvents[weekKey] = 0;
-    }
-    (events || []).forEach(event => {
-      if (event?.event_date) {
-        const eventDate = new Date(event.event_date);
-        const weeksAgo = Math.floor((now - eventDate) / (7 * 24 * 60 * 60 * 1000));
-        if (weeksAgo >= 0 && weeksAgo <= 5) {
-          const weekKey = `Sem ${6 - weeksAgo}`;
-          if (weeklyEvents[weekKey] !== undefined) weeklyEvents[weekKey] += 1;
-        }
-      }
-    });
-    return Object.entries(weeklyEvents).map(([name, value]) => ({ name, value }));
-  }, [events]);
 
   useEffect(() => {
     // Set initial filtered transactions
@@ -326,12 +270,6 @@ const FinancialTracking = () => {
             )}
           </div>
 
-          {/* Charts Section moved from Dashboard */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-            <ChartWidget title="Receita Mensal (R$)" data={revenueChartData} type="bar" height={250} />
-            <ChartWidget title="Distribuição de DJs por Gênero" data={djDistributionData} type="pie" height={250} />
-            <ChartWidget title="Tendência de Eventos (Semanal)" data={eventTrendData} type="line" height={250} />
-          </div>
 
           {/* Distribution Summary */}
           <div className="bg-card border border-border rounded-lg p-6">

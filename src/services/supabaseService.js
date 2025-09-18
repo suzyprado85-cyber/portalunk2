@@ -165,13 +165,33 @@ export const eventService = {
   // Create new event
   async create(eventData) {
     try {
-      const { data, error } = await supabase?.from('events')?.insert(eventData)?.select(`
+      const attemptInsert = async (payload) => {
+        const { data, error } = await supabase?.from('events')?.insert(payload)?.select(`
           *,
           dj:djs(id, name, profile_image_url),
           producer:profiles(id, name, company_name)
         `)?.single();
-      
-      if (error) return handleError(error, 'Erro ao criar evento');
+        return { data, error };
+      };
+
+      // First attempt
+      let { data, error } = await attemptInsert(eventData);
+
+      // If error indicates missing column(s), try to remove them and retry once
+      if (error && typeof error.message === 'string') {
+        const missingColMatch = error.message.match(/Could not find the '([^']+)' column/);
+        if (missingColMatch) {
+          const missingCol = missingColMatch[1];
+          console.warn(`Coluna ausente detectada ao criar evento: ${missingCol}. Tentando novamente sem esse campo.`);
+          const cleaned = { ...eventData };
+          delete cleaned[missingCol];
+          const retry = await attemptInsert(cleaned);
+          if (retry.error) return handleError(retry.error, 'Erro ao criar evento');
+          return { data: retry.data };
+        }
+        return handleError(error, 'Erro ao criar evento');
+      }
+
       return { data };
     } catch (error) {
       return handleError(error, 'Erro de conexão ao criar evento');
@@ -181,13 +201,33 @@ export const eventService = {
   // Update event
   async update(id, updates) {
     try {
-      const { data, error } = await supabase?.from('events')?.update(updates)?.eq('id', id)?.select(`
+      const attemptUpdate = async (payload) => {
+        const { data, error } = await supabase?.from('events')?.update(payload)?.eq('id', id)?.select(`
           *,
           dj:djs(id, name, profile_image_url),
           producer:profiles(id, name, company_name)
         `)?.single();
-      
-      if (error) return handleError(error, 'Erro ao atualizar evento');
+        return { data, error };
+      };
+
+      // First attempt
+      let { data, error } = await attemptUpdate(updates);
+
+      // If error indicates missing column(s), try to remove them and retry once
+      if (error && typeof error.message === 'string') {
+        const missingColMatch = error.message.match(/Could not find the '([^']+)' column/);
+        if (missingColMatch) {
+          const missingCol = missingColMatch[1];
+          console.warn(`Coluna ausente detectada ao atualizar evento: ${missingCol}. Tentando novamente sem esse campo.`);
+          const cleaned = { ...updates };
+          delete cleaned[missingCol];
+          const retry = await attemptUpdate(cleaned);
+          if (retry.error) return handleError(retry.error, 'Erro ao atualizar evento');
+          return { data: retry.data };
+        }
+        return handleError(error, 'Erro ao atualizar evento');
+      }
+
       return { data };
     } catch (error) {
       return handleError(error, 'Erro de conexão ao atualizar evento');
