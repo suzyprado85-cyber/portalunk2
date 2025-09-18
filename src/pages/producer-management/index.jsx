@@ -114,6 +114,7 @@ const ProducerManagement = () => {
   const [newPassword, setNewPassword] = useState('');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(null);
+  const [selectedAvatarPreview, setSelectedAvatarPreview] = useState('');
   const fileInputRef = useRef(null);
 
   useEffect(() => {
