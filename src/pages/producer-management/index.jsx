@@ -9,7 +9,6 @@ import { useSupabaseData } from '../../hooks/useSupabaseData';
 import { producerService, djService } from '../../services/supabaseService';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
 
 const ProducerCard = ({ producer, onView, onEdit, onChangePassword, onSelectDJ }) => {
   const avatar = producer?.profile_image_url || producer?.avatar_url || null;
