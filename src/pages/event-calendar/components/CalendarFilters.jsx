@@ -107,17 +107,6 @@ const CalendarFilters = ({
                 </button>
               </div>
             )}
-            {filters?.eventType && (
-              <div className="flex items-center bg-secondary/10 text-secondary px-3 py-1 rounded-full text-sm">
-                <span>Tipo: {eventTypeOptions?.find(opt => opt?.value === filters?.eventType)?.label}</span>
-                <button
-                  onClick={() => handleFilterChange('eventType', '')}
-                  className="ml-2 hover:bg-secondary/20 rounded-full p-1"
-                >
-                  <Icon name="X" size={12} />
-                </button>
-              </div>
-            )}
             {filters?.status && (
               <div className="flex items-center bg-accent/10 text-accent px-3 py-1 rounded-full text-sm">
                 <span>Status: {statusOptions?.find(opt => opt?.value === filters?.status)?.label}</span>
