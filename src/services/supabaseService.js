@@ -299,7 +299,7 @@ export const eventService = {
         const { data: existingPayments } = await supabase?.from('payments')?.select('*')?.eq('event_id', id)?.limit(1);
         const existing = (existingPayments && existingPayments.length > 0) ? existingPayments[0] : null;
 
-        if (isConfirmed && cacheValue != null && !cacheIsento && parseFloat(cacheValue) > 0) {
+        if (isConfirmed && cacheValue != null && !cacheIsExempt && parseFloat(cacheValue) > 0) {
           const commissionPct = (updatedEvent?.commission_percentage != null) ? parseFloat(updatedEvent.commission_percentage) : (updates?.commission_percentage != null ? parseFloat(updates.commission_percentage) : 10);
           const commissionAmount = (parseFloat(cacheValue) * (commissionPct / 100));
 
