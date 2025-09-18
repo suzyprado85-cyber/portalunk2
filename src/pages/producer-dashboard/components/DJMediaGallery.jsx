@@ -4,8 +4,11 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { mediaService } from '../../../services/mediaService';
 import { djService } from '../../../services/djService';
+import { storageService } from '../../../services/supabaseService';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const DJMediaGallery = ({ djId }) => {
+  const { userProfile } = useAuth();
   const [mediaFiles, setMediaFiles] = useState({
     logo: [],
     presskit: [],
@@ -18,6 +21,10 @@ const DJMediaGallery = ({ djId }) => {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('logo');
   const [djName, setDjName] = useState('');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [sharePassword, setSharePassword] = useState('');
+  const [shareGenerating, setShareGenerating] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
 
   const categories = [
     { id: 'logo', name: 'Logo', icon: 'Image' },
@@ -134,6 +141,49 @@ const DJMediaGallery = ({ djId }) => {
     count: mediaFiles[cat.id]?.length || 0
   })).filter(cat => cat.count > 0);
 
+  const sha256 = async (text) => {
+    const msgUint8 = new TextEncoder().encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+  };
+
+  const handleGenerateShare = async (e) => {
+    e?.preventDefault?.();
+    if (!djId || !djName) return;
+    if (!sharePassword || sharePassword.length < 4) {
+      toast.error('Defina uma senha com pelo menos 4 caracteres');
+      return;
+    }
+    setShareGenerating(true);
+    try {
+      const token = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+      const password_hash = await sha256(sharePassword);
+      const payload = {
+        token,
+        djId,
+        djName,
+        producerId: userProfile?.id || null,
+        createdAt: new Date().toISOString(),
+        password_hash
+      };
+      const path = `links/${token}.json`;
+      const { error } = await storageService.uploadJson('shared-links', path, payload);
+      if (error) {
+        toast.error('Erro ao gerar link compartilhado');
+        return;
+      }
+      const link = `${window.location.origin}/share/${token}`;
+      setShareUrl(link);
+      toast.success('Link gerado!');
+    } catch (err) {
+      toast.error('Falha ao gerar link');
+    } finally {
+      setShareGenerating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -156,16 +206,25 @@ const DJMediaGallery = ({ djId }) => {
         <h3 className="text-lg font-semibold text-foreground">
           Galeria de Mídia {djName && `- ${djName}`}
         </h3>
-        {currentFiles.length > 0 && (
+        <div className="flex items-center gap-2">
+          {currentFiles.length > 0 && (
+            <Button
+              onClick={handleDownloadAll}
+              iconName="Download"
+              iconPosition="left"
+              variant="outline"
+            >
+              Baixar Tudo
+            </Button>
+          )}
           <Button
-            onClick={handleDownloadAll}
-            iconName="Download"
+            onClick={() => setShowShareModal(true)}
+            iconName="Share2"
             iconPosition="left"
-            variant="outline"
           >
-            Baixar Tudo
+            Compartilhar mídias
           </Button>
-        )}
+        </div>
       </div>
 
       {/* Folder Navigation */}
@@ -257,6 +316,58 @@ const DJMediaGallery = ({ djId }) => {
           <p className="text-muted-foreground">
             {djName ? `Não há arquivos na categoria ${categories.find(c => c.id === selectedCategory)?.name} do DJ ${djName}` : 'Carregando informações do DJ...'}
           </p>
+        </div>
+      )}
+
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border rounded-lg w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h4 className="text-lg font-semibold text-foreground">Compartilhar mídias</h4>
+              <Button variant="ghost" size="sm" iconName="X" onClick={() => { setShowShareModal(false); setShareUrl(''); }} />
+            </div>
+            <div className="p-4 space-y-4">
+              <p className="text-sm text-muted-foreground">Crie um link protegido por senha para compartilhar as mídias do DJ.</p>
+              <form onSubmit={handleGenerateShare} className="space-y-3">
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">Senha do produtor</label>
+                  <input
+                    type="password"
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                    value={sharePassword}
+                    onChange={(e) => setSharePassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full" loading={shareGenerating} iconName="Link" iconPosition="left">
+                  Gerar link
+                </Button>
+              </form>
+              {shareUrl && (
+                <div className="bg-muted rounded-md p-3 border border-border">
+                  <p className="text-xs text-muted-foreground mb-2">Link gerado:</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={shareUrl}
+                      className="flex-1 px-2 py-2 text-sm bg-background border border-border rounded-md"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(shareUrl);
+                        toast.success('Link copiado');
+                      }}
+                      iconName="Copy"
+                      iconPosition="left"
+                    >
+                      Copiar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

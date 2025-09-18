@@ -17,6 +17,7 @@ const DJProfile = lazy(() => import('./pages/dj-profile'));
 const Login = lazy(() => import('./pages/auth/Login'));
 const Signup = lazy(() => import('./pages/auth/Signup'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const SharedMedia = lazy(() => import('./pages/share/SharedMedia'));
 
 const Routes = () => {
   return (
@@ -33,7 +34,8 @@ const Routes = () => {
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-              
+              <Route path="/share/:token" element={<SharedMedia />} />
+
               {/* Protected Routes */}
               <Route path="/" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
               <Route path="/admin-dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

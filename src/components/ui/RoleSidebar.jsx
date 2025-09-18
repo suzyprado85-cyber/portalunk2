@@ -151,21 +151,30 @@ const RoleSidebar = ({ userRole = 'admin', isCollapsed = false, onToggleCollapse
               <li key={item?.id}>
                 <button
                   onClick={() => handleNavigation(item?.path)}
-                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-md text-left transition-all duration-150 ease-smooth transform hover:scale-98 ${
+                  className={`relative w-full flex items-center space-x-3 px-3 py-2 rounded-md text-left transition-all duration-150 ease-smooth transform hover:scale-98 ${
                     isActive(item?.path)
-                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      ? 'relative overflow-visible bg-gradient-to-r from-[#160423] via-[#2b0b3c] to-[#3b1b6b] text-white shadow-[0_0_30px_rgba(124,58,237,0.28)] border border-purple-700/30'
                       : 'text-foreground hover:bg-muted hover:text-foreground'
                   }`}
                   title={isCollapsed ? item?.label : undefined}
                 >
+
+                  {/* Colored glow behind active button */}
+                  {isActive(item?.path) && (
+                    <span className="pointer-events-none absolute -inset-px rounded-md blur-xl opacity-70 bg-gradient-to-r from-purple-600/40 via-indigo-500/30 to-pink-600/20" />
+                  )}
                   <Icon
                     name={item?.icon}
                     size={20}
-                    className={isActive(item?.path) ? 'text-primary-foreground' : 'text-muted-foreground'}
+                    className={isActive(item?.path) ? 'text-white' : 'text-muted-foreground'}
                   />
                   <span className={`font-medium truncate ${isCollapsed ? 'hidden group-hover:inline' : 'inline'}`}>
                     {item?.label}
                   </span>
+
+                  {isActive(item?.path) && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-purple-400 ring-2 ring-white/10 shadow-sm" />
+                  )}
                 </button>
               </li>
             ))}

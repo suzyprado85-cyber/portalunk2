@@ -14,7 +14,6 @@ export const paymentService = {
             event_date,
             location,
             cache_value,
-            commission_percentage,
             dj:djs(id, name),
             producer:profiles(id, name, company_name, email)
           )
@@ -113,8 +112,7 @@ export const paymentService = {
           event:events(
             id,
             title,
-            cache_value,
-            commission_percentage
+            cache_value
           )
         `)
         .single();
