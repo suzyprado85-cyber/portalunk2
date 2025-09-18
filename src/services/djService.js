@@ -159,7 +159,7 @@ export const djService = {
       const fileName = `${djId}_profile_${Date.now()}.${fileExt}`;
       const filePath = `dj-profiles/${fileName}`;
 
-      const { data, error } = await supabase?.storage?.from('dj-media')?.upload(filePath, file);
+      const { data, error } = await supabase?.storage?.from('dj-media')?.upload(filePath, file, { upsert: true, cacheControl: '3600', contentType: file?.type || undefined });
 
       if (error) return handleError(error, 'Erro ao fazer upload da imagem');
 
